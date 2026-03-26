@@ -380,8 +380,8 @@ export async function PATCH(
         entityId: path[1],
         entityLabel: after.name?.en ?? 'Unknown player',
         user,
-        before: resolveIds(sanitize(before as unknown as Record<string, unknown>)),
-        after:  resolveIds(sanitize(after  as unknown as Record<string, unknown>)),
+        before: resolveIds(sanitize(before as unknown as Record<string, unknown>) ?? {}),
+        after:  resolveIds(sanitize(after  as unknown as Record<string, unknown>) ?? {}),
         ip,
       })
     }
