@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { CustomSelect } from '@/components/CustomSelect'
 import { useRouter } from 'next/navigation'
 import type { Role } from '@/types/domain'
 import { AppNav } from '@/components/AppNav'
@@ -272,10 +273,14 @@ export default function UsersPage() {
               {/* Role */}
               <div>
                 <label style={{ display: 'block', fontFamily: 'var(--onest)', fontSize: 11, fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase' as const, color: 'var(--t3)', marginBottom: 5 }}>Role</label>
-                <select value={draft.roleId} onChange={e => setDraft(d => ({ ...d, roleId: e.target.value }))} style={{ ...inp(errors.roleId), appearance: 'auto' }}>
-                  <option value="">Select role…</option>
-                  {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
-                </select>
+                <CustomSelect
+                  value={draft.roleId}
+                  onChange={v => setDraft(d => ({ ...d, roleId: v }))}
+                  options={roles.map(r => ({ value: r.id, label: r.name }))}
+                  placeholder="Select role…"
+                  error={errors.roleId}
+                  searchable={false}
+                />
                 {errors.roleId && <div style={{ fontFamily: 'var(--onest)', fontSize: 11, color: '#C8102E', marginTop: 3 }}>{errors.roleId}</div>}
               </div>
               {/* Active toggle */}

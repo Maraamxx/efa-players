@@ -8,6 +8,7 @@ import { apiFetch } from '@/lib/apiFetch'
 import { isArabic, ARABIC_RE, LATIN_RE } from '@/lib/font'
 import { DynamicFieldInput } from '@/components/DynamicFieldInput'
 import { AppNav } from '@/components/AppNav'
+import { CustomSelect } from '@/components/CustomSelect'
 // ── types ─────────────────────────────────────────────────────────────────────
 
 interface Nationality {
@@ -155,36 +156,6 @@ const Input = ({
         transition: 'border-color .15s',
       }}
     />
-  )
-}
-
-function Select({
-  value, onChange, children, placeholder
-}: {
-  value: string; onChange: (v: string) => void
-  children: React.ReactNode; placeholder?: string
-}) {
-  const [focused, setFocused] = useState(false)
-  return (
-    <select
-      value={value}
-      onChange={e => onChange(e.target.value)}
-      onFocus={() => setFocused(true)}
-      onBlur={() => setFocused(false)}
-      style={{
-        width: '100%', height: 38,
-        border: `1px solid ${focused ? 'var(--red)' : 'var(--border2)'}`,
-        borderRadius: 'var(--r)', background: 'var(--bg)',
-        fontFamily: 'var(--onest)', fontSize: 13,
-        color: value ? 'var(--t1)' : 'var(--t3)',
-        padding: '0 12px', outline: 'none', cursor: 'pointer',
-        boxShadow: focused ? '0 0 0 3px var(--redDim)' : 'none',
-        transition: 'border-color .15s',
-      }}
-    >
-      {placeholder && <option value="">{placeholder}</option>}
-      {children}
-    </select>
   )
 }
 
@@ -647,11 +618,8 @@ router.push(`/players/${created.id}`)
                 </div>
                 <div style={fieldWrap}>
                   <FieldLabel required>STATUS</FieldLabel>
-                  <Select value={form.status} onChange={v => set('status', v as PlayerStatus)}>
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                    <option value="suspended">Suspended</option>
-                  </Select>
+                  <CustomSelect value={form.status} onChange={v => set('status', v as PlayerStatus)} searchable={false}
+                    options={[{ value: 'active', label: 'Active' }, { value: 'inactive', label: 'Inactive' }, { value: 'suspended', label: 'Suspended' }]} />
                 </div>
                 <div style={fieldWrap}>
                   <FieldLabel required>NATIONAL ID</FieldLabel>
@@ -674,18 +642,14 @@ router.push(`/players/${created.id}`)
               <div className="wizard-form-grid2" style={{ marginBottom: 16 }}>
                 <div style={fieldWrap}>
                   <FieldLabel required>POSITION</FieldLabel>
-                  <Select value={form.position} onChange={v => set('position', v as Position)} placeholder="Select position">
-                    {POSITIONS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
-                  </Select>
+                  <CustomSelect value={form.position} onChange={v => set('position', v as Position)} searchable={false}
+                    options={POSITIONS.map(p => ({ value: p.value, label: p.label }))} placeholder="Select position" />
                   {err('position')}
                 </div>
                 <div style={fieldWrap}>
                   <FieldLabel required>PREFERRED FOOT</FieldLabel>
-                  <Select value={form.preferredFoot} onChange={v => set('preferredFoot', v as any)} placeholder="Select foot">
-                    <option value="right">Right</option>
-                    <option value="left">Left</option>
-                    <option value="both">Both</option>
-                  </Select>
+                  <CustomSelect value={form.preferredFoot} onChange={v => set('preferredFoot', v as any)} searchable={false}
+                    options={[{ value: 'right', label: 'Right' }, { value: 'left', label: 'Left' }, { value: 'both', label: 'Both' }]} placeholder="Select foot" />
                   {err('preferredFoot')}
                 </div>
                 <div style={fieldWrap}>
@@ -695,16 +659,14 @@ router.push(`/players/${created.id}`)
                 </div>
                 <div style={fieldWrap}>
                   <FieldLabel required>CURRENT CLUB</FieldLabel>
-                  <Select value={form.currentClubId} onChange={v => set('currentClubId', v)} placeholder="Select club">
-                    {clubs.map(c => <option key={c.id} value={c.id}>{c.name.en}</option>)}
-                  </Select>
+                  <CustomSelect value={form.currentClubId} onChange={v => set('currentClubId', v)}
+                    options={clubs.map(c => ({ value: c.id, label: c.name.en }))} placeholder="Select club" />
                   {err('currentClubId')}
                 </div>
                 <div style={fieldWrap}>
                   <FieldLabel required>CURRENT LEAGUE</FieldLabel>
-                  <Select value={form.currentLeagueId} onChange={v => set('currentLeagueId', v)} placeholder="Select league">
-                    {leagues.map(l => <option key={l.id} value={l.id}>{l.name.en}</option>)}
-                  </Select>
+                  <CustomSelect value={form.currentLeagueId} onChange={v => set('currentLeagueId', v)}
+                    options={leagues.map(l => ({ value: l.id, label: l.name.en }))} placeholder="Select league" />
                   {err('currentLeagueId')}
                 </div>
               </div>
@@ -757,16 +719,15 @@ router.push(`/players/${created.id}`)
                             Egypt
                           </div>
                         ) : (
-                          <Select
+                          <CustomSelect
                             value={nat.countryCode}
                             onChange={v => {
                               const updated = [...form.nationalities]
                               updated[i] = { ...updated[i], countryCode: v }
                               set('nationalities', updated)
                             }}
-                          >
-                            {COUNTRIES.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
-                          </Select>
+                            options={COUNTRIES.map(c => ({ value: c.code, label: c.name, flag: FLAG(c.code) }))}
+                          />
                         )}
                       </div>
                       {/* flag preview */}

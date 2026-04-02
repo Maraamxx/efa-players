@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import type { FieldSchema } from '@/types/domain'
+import { CustomSelect } from '@/components/CustomSelect'
 
 // ── local input primitives (mirrors the ones in [id]/page.tsx) ────────────────
 
@@ -44,27 +45,6 @@ function InlineInput({
   )
 }
 
-function InlineSelect({
-  value, onChange, children,
-}: { value: string; onChange: (v: string) => void; children: React.ReactNode }) {
-  const [focused, setFocused] = useState(false)
-  return (
-    <select value={value} onChange={e => onChange(e.target.value)}
-      onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
-      style={{
-        width: '100%', height: 34,
-        border: `1px solid ${focused ? 'var(--red)' : 'var(--border2)'}`,
-        borderRadius: 'var(--r)', background: 'var(--bg)',
-        fontFamily: 'var(--onest)', fontSize: 13,
-        color: 'var(--t1)', padding: '0 12px', outline: 'none',
-        boxShadow: focused ? '0 0 0 3px var(--redDim)' : 'none',
-        transition: 'border-color .15s', cursor: 'pointer',
-      }}
-    >
-      {children}
-    </select>
-  )
-}
 
 // ── exported component ────────────────────────────────────────────────────────
 
@@ -105,10 +85,9 @@ export function DynamicFieldInput({
   }
   if (schema.fieldType === 'select' && schema.options) {
     return (
-      <InlineSelect value={value} onChange={onChange}>
-        <option value="">Select {schema.label.en}…</option>
-        {schema.options.map(o => <option key={o.en} value={o.en}>{o.en}</option>)}
-      </InlineSelect>
+      <CustomSelect value={value} onChange={onChange}
+        options={schema.options.map(o => ({ value: o.en, label: o.en }))}
+        placeholder={`Select ${schema.label.en}…`} searchable={false} />
     )
   }
   if (schema.fieldType === 'multiselect' && schema.options) {

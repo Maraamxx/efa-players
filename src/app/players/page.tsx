@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import type { Player, Club, PaginatedResponse, Position, PlayerStatus } from '@/types/domain'
 import { AppNav } from '@/components/AppNav'
 import { useCan } from '@/lib/auth'
+import { CustomSelect } from '@/components/CustomSelect'
 
 const POS_CSS: Record<Position, React.CSSProperties> = {
   GK:  { background: 'rgba(234,179,8,.10)',  color: '#854d0e', borderColor: 'rgba(234,179,8,.35)' },
@@ -183,40 +184,21 @@ export default function PlayersPage() {
             }}>/</span>
           </div>
 
-          {([
-            ['position', position, setPosition, [['','All Positions'],['GK','Goalkeeper'],['DEF','Defender'],['MID','Midfielder'],['FWD','Forward']]],
-            ['status',   status,   setStatus,   [['','All Statuses'],['active','Active'],['inactive','Inactive'],['suspended','Suspended']]],
-          ] as const).map(([key, val, setter, opts]: any) => (
-            <select
-              key={key}
-              value={val}
-              onChange={(e: any) => setter(e.target.value)}
-              style={{
-                height: 34, fontSize: 13, fontFamily: 'var(--onest)',
-                background: 'var(--bg)', border: '1px solid var(--border)',
-                borderRadius: 5, color: val ? 'var(--t1)' : 'var(--t3)',
-                padding: '0 10px', outline: 'none', cursor: 'pointer',
-                flex: '1 1 140px',
-              }}
-            >
-              {opts.map(([v, l]: any) => <option key={v} value={v}>{l}</option>)}
-            </select>
-          ))}
-
-          <select
-            value={clubId}
-            onChange={e => setClubId(e.target.value)}
-            style={{
-              height: 34, fontSize: 13, fontFamily: 'var(--onest)',
-              background: 'var(--bg)', border: '1px solid var(--border)',
-              borderRadius: 5, color: clubId ? 'var(--t1)' : 'var(--t3)',
-              padding: '0 10px', outline: 'none', cursor: 'pointer',
-              flex: '1 1 140px',
-            }}
-          >
-            <option value="">All Clubs</option>
-            {clubs.map(c => <option key={c.id} value={c.id}>{c.name.en}</option>)}
-          </select>
+          <div style={{ flex: '1 1 140px' }}>
+            <CustomSelect value={position} onChange={setPosition} searchable={false}
+              options={[{ value: '', label: 'All Positions' }, { value: 'GK', label: 'Goalkeeper' }, { value: 'DEF', label: 'Defender' }, { value: 'MID', label: 'Midfielder' }, { value: 'FWD', label: 'Forward' }]}
+            />
+          </div>
+          <div style={{ flex: '1 1 140px' }}>
+            <CustomSelect value={status} onChange={setStatus} searchable={false}
+              options={[{ value: '', label: 'All Statuses' }, { value: 'active', label: 'Active' }, { value: 'inactive', label: 'Inactive' }, { value: 'suspended', label: 'Suspended' }]}
+            />
+          </div>
+          <div style={{ flex: '1 1 140px' }}>
+            <CustomSelect value={clubId} onChange={setClubId}
+              options={[{ value: '', label: 'All Clubs' }, ...clubs.map(c => ({ value: c.id, label: c.name.en }))]}
+            />
+          </div>
 
           {hasFilters && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>

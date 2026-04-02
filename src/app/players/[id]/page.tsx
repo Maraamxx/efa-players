@@ -15,6 +15,7 @@ import { fmtDate } from '@/lib/dates'
 import { useToast } from '@/components/Toast'
 import { useEscKey } from '@/lib/useEscKey'
 import { ProfileSkeleton, SkeletonStyles } from '@/components/Skeleton'
+import { CustomSelect } from '@/components/CustomSelect'
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -103,27 +104,6 @@ function InlineInput({
     : <input type={type === 'tel' ? 'text' : type} inputMode={type === 'tel' ? 'numeric' as const : undefined} {...props} />
 }
 
-function InlineSelect({
-  value, onChange, children,
-}: { value: string; onChange: (v: string) => void; children: React.ReactNode }) {
-  const [focused, setFocused] = useState(false)
-  return (
-    <select value={value} onChange={e => onChange(e.target.value)}
-      onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
-      style={{
-        width: '100%', height: 34,
-        border: `1px solid ${focused ? 'var(--red)' : 'var(--border2)'}`,
-        borderRadius: 'var(--r)', background: 'var(--bg)',
-        fontFamily: 'var(--onest)', fontSize: 13,
-        color: 'var(--t1)', padding: '0 12px', outline: 'none',
-        boxShadow: focused ? '0 0 0 3px var(--redDim)' : 'none',
-        transition: 'border-color .15s', cursor: 'pointer',
-      }}
-    >
-      {children}
-    </select>
-  )
-}
 
 // ── dynamic field renderer (display + edit) ───────────────────────────────────
 
@@ -237,9 +217,8 @@ function AddFieldInline({
           <div style={{ fontFamily: 'var(--onest)', fontSize: 9, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase' as const, color: 'var(--t3)', marginBottom: 4 }}>
             Field type *
           </div>
-          <InlineSelect value={fieldType} onChange={v => { setFieldType(v as FieldType); setOptions([]) }}>
-            {FIELD_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-          </InlineSelect>
+          <CustomSelect value={fieldType} onChange={v => { setFieldType(v as FieldType); setOptions([]) }} searchable={false}
+            options={FIELD_TYPES.map(t => ({ value: t.value, label: t.label }))} />
         </div>
       </div>
 
@@ -1123,11 +1102,8 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
                 <InfoRow label="Status"        editing={editing}
                   display={<span style={{ color: player.status === 'active' ? 'var(--green)' : player.status === 'suspended' ? 'var(--red)' : 'var(--t2)' }}>{player.status}</span>}
                   edit={
-                    <InlineSelect value={draftPersonal.status ?? ''} onChange={v => setDraftPersonal((d: any) => ({ ...d, status: v }))}>
-                      <option value="active">Active</option>
-                      <option value="inactive">Inactive</option>
-                      <option value="suspended">Suspended</option>
-                    </InlineSelect>
+                    <CustomSelect value={draftPersonal.status ?? ''} onChange={v => setDraftPersonal((d: any) => ({ ...d, status: v }))} searchable={false}
+                      options={[{ value: 'active', label: 'Active' }, { value: 'inactive', label: 'Inactive' }, { value: 'suspended', label: 'Suspended' }]} />
                   }
                 />
                 <InfoRow label="National ID"   editing={editing}
@@ -1236,14 +1212,9 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
                     </div>
                   }
                   edit={
-                    <InlineSelect value={draftFootball.currentClubId ?? ''} onChange={v => setDraftFootball((d: any) => ({ ...d, currentClubId: v }))}>
-                      <option value="">Select club…</option>
-                      {clubs.map(c => (
-                        <option key={c.id} value={c.id}>
-                          {c.name.en}{c.name.ar ? ` — ${c.name.ar}` : ''}
-                        </option>
-                      ))}
-                    </InlineSelect>
+                    <CustomSelect value={draftFootball.currentClubId ?? ''} onChange={v => setDraftFootball((d: any) => ({ ...d, currentClubId: v }))}
+                      options={[{ value: '', label: 'Select club…' }, ...clubs.map(c => ({ value: c.id, label: c.name.en }))]}
+                      placeholder="Select club…" />
                   }
                 />
                 <InfoRow label="League"        editing={editing}
@@ -1260,28 +1231,23 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
                     </div>
                   }
                   edit={
-                    <InlineSelect value={draftFootball.currentLeagueId ?? ''} onChange={v => setDraftFootball((d: any) => ({ ...d, currentLeagueId: v }))}>
-                      <option value="">Select league…</option>
-                      {leagues.map(l => <option key={l.id} value={l.id}>{l.name.en}</option>)}
-                    </InlineSelect>
+                    <CustomSelect value={draftFootball.currentLeagueId ?? ''} onChange={v => setDraftFootball((d: any) => ({ ...d, currentLeagueId: v }))}
+                      options={[{ value: '', label: 'Select league…' }, ...leagues.map(l => ({ value: l.id, label: l.name.en }))]}
+                      placeholder="Select league…" />
                   }
                 />
                 <InfoRow label="Position"      editing={editing}
                   display={<span>{POS_FULL[player.position as keyof typeof POS_FULL] ?? '—'}</span>}
                   edit={
-                    <InlineSelect value={draftFootball.position ?? ''} onChange={v => setDraftFootball((d: any) => ({ ...d, position: v }))}>
-                      {(['GK','DEF','MID','FWD'] as const).map(p => <option key={p} value={p}>{POS_FULL[p]}</option>)}
-                    </InlineSelect>
+                    <CustomSelect value={draftFootball.position ?? ''} onChange={v => setDraftFootball((d: any) => ({ ...d, position: v }))} searchable={false}
+                      options={(['GK','DEF','MID','FWD'] as const).map(p => ({ value: p, label: POS_FULL[p] }))} />
                   }
                 />
                 <InfoRow label="Preferred foot" editing={editing}
                   display={<span>{FOOT[player.preferredFoot as keyof typeof FOOT] ?? '—'}</span>}
                   edit={
-                    <InlineSelect value={draftFootball.preferredFoot ?? ''} onChange={v => setDraftFootball((d: any) => ({ ...d, preferredFoot: v }))}>
-                      <option value="right">Right</option>
-                      <option value="left">Left</option>
-                      <option value="both">Both</option>
-                    </InlineSelect>
+                    <CustomSelect value={draftFootball.preferredFoot ?? ''} onChange={v => setDraftFootball((d: any) => ({ ...d, preferredFoot: v }))} searchable={false}
+                      options={[{ value: 'right', label: 'Right' }, { value: 'left', label: 'Left' }, { value: 'both', label: 'Both' }]} />
                   }
                 />
                 <InfoRow label="Height"        editing={editing}
@@ -1346,12 +1312,12 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
                         {isEgyptian ? (
                           <span style={{ fontFamily: 'var(--onest)', fontSize: 13, fontWeight: 600, color: 'var(--t1)', flex: 1 }}>Egypt</span>
                         ) : (
-                          <select value={nat.countryCode}
-                            onChange={e => setDraftNat(n => n.map((x: any, j: number) => j === i ? { ...x, countryCode: e.target.value } : x))}
-                            style={{ height: 30, border: '1px solid var(--border2)', borderRadius: 4, background: 'var(--bg)', fontFamily: 'var(--onest)', fontSize: 12, color: 'var(--t1)', padding: '0 8px', outline: 'none', flex: 1 }}
-                          >
-                            {COUNTRIES.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
-                          </select>
+                          <div style={{ flex: 1 }}>
+                            <CustomSelect value={nat.countryCode}
+                              onChange={v => setDraftNat(n => n.map((x: any, j: number) => j === i ? { ...x, countryCode: v } : x))}
+                              options={COUNTRIES.map(c => ({ value: c.code, label: c.name, flag: `https://flagcdn.com/20x15/${c.code.toLowerCase()}.png` }))}
+                            />
+                          </div>
                         )}
                         <input value={nat.passportNumber ?? ''}
                           onChange={e => setDraftNat(n => n.map((x: any, j: number) => j === i ? { ...x, passportNumber: e.target.value.toUpperCase() } : x))}
@@ -1553,12 +1519,12 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
                     <div style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0, background: isCurrent ? 'var(--red)' : 'var(--s3)', border: `1.5px solid ${isCurrent ? 'var(--red)' : 'var(--border2)'}`, boxShadow: isCurrent ? '0 0 6px rgba(200,16,46,.4)' : 'none' }} />
                     {editing ? (
                       <>
-                        <select value={h.clubId ?? ''}
-                          onChange={e => setDraftHistory((d: any[]) => d.map((x, j) => j === i ? { ...x, clubId: e.target.value } : x))}
-                          style={{ height: 30, border: '1px solid var(--border2)', borderRadius: 4, background: 'var(--bg)', fontFamily: 'var(--onest)', fontSize: 12, color: 'var(--t1)', padding: '0 8px', outline: 'none', flex: 1 }}>
-                          <option value="">Select club…</option>
-                          {clubs.map(c => <option key={c.id} value={c.id}>{c.name.en}</option>)}
-                        </select>
+                        <div style={{ flex: 1 }}>
+                          <CustomSelect value={h.clubId ?? ''}
+                            onChange={v => setDraftHistory((d: any[]) => d.map((x, j) => j === i ? { ...x, clubId: v } : x))}
+                            options={[{ value: '', label: 'Select club…' }, ...clubs.map(c => ({ value: c.id, label: c.name.en }))]}
+                            placeholder="Select club…" />
+                        </div>
                         <input type="date" value={fromDate ?? ''}
                           onChange={e => setDraftHistory((d: any[]) => d.map((x, j) => j === i ? { ...x, from: e.target.value, joinDate: e.target.value } : x))}
                           style={{ height: 30, border: '1px solid var(--border2)', borderRadius: 4, background: 'var(--bg)', fontFamily: 'var(--onest)', fontSize: 12, color: 'var(--t1)', padding: '0 8px', outline: 'none', width: 130 }} />

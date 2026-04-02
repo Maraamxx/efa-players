@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import type { AuditEntry, AuditAction, AuditEntityType } from '@/types/domain'
 import { AppNav } from '@/components/AppNav'
 import { useCan, useAuth } from '@/lib/auth'
+import { CustomSelect } from '@/components/CustomSelect'
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -426,13 +427,11 @@ export default function AuditPage() {
     })}
   </div>
 
-  <select value={filterType} onChange={e => setFilterType(e.target.value as AuditEntityType | 'all')}
-    style={{ height: 34, border: '1px solid var(--border2)', borderRadius: 5, background: 'var(--bg2)', fontFamily: 'var(--onest)', fontSize: 12, color: 'var(--t1)', padding: '0 8px', outline: 'none', flexShrink: 0 }}>
-    <option value="all">All types</option>
-    {(Object.entries(ENTITY_LABEL) as [AuditEntityType, string][]).map(([v, l]) => (
-      <option key={v} value={v}>{l}</option>
-    ))}
-  </select>
+  <div style={{ flexShrink: 0, minWidth: 140 }}>
+    <CustomSelect value={filterType} onChange={v => setFilterType(v as AuditEntityType | 'all')} searchable={false}
+      options={[{ value: 'all', label: 'All types' }, ...(Object.entries(ENTITY_LABEL) as [AuditEntityType, string][]).map(([v, l]) => ({ value: v, label: l }))]}
+    />
+  </div>
 
   <span style={{ fontFamily: 'var(--onest)', fontSize: 11, color: 'var(--t3)', whiteSpace: 'nowrap' }}>
     {filtered.length} result{filtered.length !== 1 ? 's' : ''}
