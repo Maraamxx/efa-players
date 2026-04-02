@@ -1376,10 +1376,14 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
                 )})}
                 {editing && (
                   <div style={{ padding: '8px 16px' }}>
-                    <button onClick={() => setDraftNat((n: any[]) => [...n, { countryCode: 'MA', isPrimary: false, passportNumber: '' }])}
-                      style={{ fontFamily: 'var(--onest)', fontSize: 11, fontWeight: 600, color: 'var(--red)', background: 'transparent', border: '1px dashed rgba(200,16,46,.3)', borderRadius: 4, padding: '5px 12px', cursor: 'pointer' }}>
-                      + Add nationality
-                    </button>
+                    {draftNat.length < 4 ? (
+                      <button onClick={() => setDraftNat((n: any[]) => [...n, { countryCode: 'MA', isPrimary: false, passportNumber: '' }])}
+                        style={{ fontFamily: 'var(--onest)', fontSize: 11, fontWeight: 600, color: 'var(--red)', background: 'transparent', border: '1px dashed rgba(200,16,46,.3)', borderRadius: 4, padding: '5px 12px', cursor: 'pointer' }}>
+                        + Add nationality ({draftNat.length}/4)
+                      </button>
+                    ) : (
+                      <span style={{ fontFamily: 'var(--onest)', fontSize: 11, color: 'var(--t3)' }}>Maximum of 4 nationalities reached</span>
+                    )}
                   </div>
                 )}
               </div>

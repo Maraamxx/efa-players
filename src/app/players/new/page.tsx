@@ -819,7 +819,12 @@ router.push(`/players/${created.id}`)
                     </div>
                   </div>
                 )})}
-                  <button
+                {form.nationalities.length >= 4 && (
+                  <div style={{ fontFamily: 'var(--onest)', fontSize: 11, color: 'var(--t3)', textAlign: 'center', padding: '10px', border: '1px dashed var(--border)', borderRadius: 'var(--r)' }}>
+                    Maximum of 4 nationalities reached
+                  </div>
+                )}
+                  {form.nationalities.length < 4 && <button
                     onClick={() => set('nationalities', [...form.nationalities, { countryCode: 'MA', isPrimary: false, passportNumber: '' }])}
                     style={{
                       border: '1px dashed var(--border2)', borderRadius: 'var(--r)',
@@ -838,8 +843,8 @@ router.push(`/players/${created.id}`)
                       e.currentTarget.style.background = 'transparent'
                     }}
                   >
-                  + ADD NATIONALITY ({form.nationalities.length} added)
-                  </button>
+                  + ADD NATIONALITY ({form.nationalities.length}/4)
+                  </button>}
               </div>
             </div>
           )}
