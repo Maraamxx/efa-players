@@ -22,11 +22,15 @@ const COUNTRIES = [
   { code: 'GB', name: 'England' },     { code: 'ES', name: 'Spain' },
   { code: 'DE', name: 'Germany' },     { code: 'FR', name: 'France' },
   { code: 'IT', name: 'Italy' },       { code: 'PT', name: 'Portugal' },
-  { code: 'NL', name: 'Netherlands' }, { code: 'TR', name: 'Turkey' },
-  { code: 'BR', name: 'Brazil' },      { code: 'AR', name: 'Argentina' },
-  { code: 'US', name: 'United States' },{ code: 'CN', name: 'China' },
-  { code: 'JP', name: 'Japan' },       { code: 'KR', name: 'South Korea' },
-  { code: 'AU', name: 'Australia' },
+  { code: 'NL', name: 'Netherlands' }, { code: 'TR', name: 'Türkiye' },
+  { code: 'BE', name: 'Belgium' },     { code: 'GR', name: 'Greece' },
+  { code: 'AT', name: 'Austria' },     { code: 'CH', name: 'Switzerland' },
+  { code: 'DK', name: 'Denmark' },     { code: 'NO', name: 'Norway' },
+  { code: 'SE', name: 'Sweden' },      { code: 'CZ', name: 'Czechia' },
+  { code: 'PL', name: 'Poland' },      { code: 'BR', name: 'Brazil' },
+  { code: 'AR', name: 'Argentina' },   { code: 'US', name: 'United States' },
+  { code: 'CN', name: 'China' },       { code: 'JP', name: 'Japan' },
+  { code: 'KR', name: 'South Korea' }, { code: 'AU', name: 'Australia' },
 ]
 const countryName = (code: string) => COUNTRIES.find(c => c.code === code)?.name ?? code
 const FLAG = (code: string) => `https://flagcdn.com/20x15/${code.toLowerCase()}.png`
