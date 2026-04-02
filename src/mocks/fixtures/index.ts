@@ -9,7 +9,7 @@ function mkLeague(id: string, en: string, ar: string, country: string, season = 
 }
 
 function mkClub(id: string, en: string, leagueId: string, country: string): Club {
-  return { id, name: { en, ar: en }, leagueId, country, logoUrl: null, isActive: true }
+  return { id, name: { en, ar: '-' }, leagueId, country, logoUrl: null, isActive: true }
 }
 
 let _ci = 0

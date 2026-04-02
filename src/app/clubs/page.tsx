@@ -73,7 +73,6 @@ export default function ClubsPage() {
   const validate = () => {
     const e: Record<string, string> = {}
     if (!draft.nameEn.trim()) e.nameEn = 'Required'
-    if (!draft.nameAr.trim()) e.nameAr = 'Required'
     if (!draft.leagueId)      e.leagueId = 'Required'
     setErrors(e); return Object.keys(e).length === 0
   }
@@ -82,7 +81,7 @@ export default function ClubsPage() {
     if (!validate()) return
     setSaving(true)
     const payload = {
-      name: { en: draft.nameEn.trim(), ar: draft.nameAr.trim() },
+      name: { en: draft.nameEn.trim(), ar: draft.nameAr.trim() || '-' },
       leagueId: draft.leagueId, country: draft.country,
       logoUrl: null, isActive: true,
     }
@@ -326,7 +325,7 @@ export default function ClubsPage() {
                   {errors.nameEn && <div style={{ fontSize: 11, color: '#C8102E', marginTop: 3 }}>{errors.nameEn}</div>}
                 </div>
                 <div>
-                  <label style={lbl}>Club Name (Arabic) *</label>
+                  <label style={lbl}>Club Name (Arabic)</label>
                   <input value={draft.nameAr}
                     onChange={e => { const v = e.target.value; if (/[a-zA-Z]/.test(v)) return; setDraft(d => ({ ...d, nameAr: v })) }}
                     placeholder="الأهلي"

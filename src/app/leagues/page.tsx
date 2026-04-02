@@ -84,7 +84,6 @@ export default function LeaguesPage() {
   const validate = () => {
     const e: Record<string, string> = {}
     if (!draft.nameEn.trim()) e.nameEn = 'Required'
-    if (!draft.nameAr.trim()) e.nameAr = 'Required'
     if (!draft.season.trim()) e.season = 'Required'
     setErrors(e); return Object.keys(e).length === 0
   }
@@ -93,7 +92,7 @@ export default function LeaguesPage() {
     if (!validate()) return
     setSaving(true)
     const payload = {
-      name: { en: draft.nameEn.trim(), ar: draft.nameAr.trim() },
+      name: { en: draft.nameEn.trim(), ar: draft.nameAr.trim() || '-' },
       country: draft.country, season: draft.season.trim(), isActive: true,
     }
     if (editLeague) {
@@ -307,7 +306,7 @@ export default function LeaguesPage() {
                   {errors.nameEn && <div style={{ fontSize: 11, color: '#C8102E', marginTop: 3 }}>{errors.nameEn}</div>}
                 </div>
                 <div>
-                  <label style={lbl}>League Name (Arabic) *</label>
+                  <label style={lbl}>League Name (Arabic)</label>
                   <input value={draft.nameAr}
                     onChange={e => { const v = e.target.value; if (/[a-zA-Z]/.test(v)) return; setDraft(d => ({ ...d, nameAr: v })) }}
                     placeholder="الدوري المصري"
