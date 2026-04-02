@@ -6,6 +6,7 @@ import type { AuditEntry, AuditAction, AuditEntityType } from '@/types/domain'
 import { AppNav } from '@/components/AppNav'
 import { useCan, useAuth } from '@/lib/auth'
 import { CustomSelect } from '@/components/CustomSelect'
+import { Pagination, usePagination } from '@/components/Pagination'
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -344,6 +345,8 @@ export default function AuditPage() {
   const [filterType,   setFilterType]   = useState<AuditEntityType | 'all'>('all')
   const [filterAction, setFilterAction] = useState<AuditAction | 'all'>('all')
   const [search,       setSearch]       = useState('')
+  const [auditPage,    setAuditPage]    = useState(1)
+  const AUDIT_PAGE_SIZE = 30
 
   useEffect(() => {
     if (!authLoading && !canViewAudit) { router.replace('/players'); return }
@@ -364,7 +367,11 @@ export default function AuditPage() {
     return true
   })
 
-  const grouped = filtered.reduce<Record<string, AuditEntry[]>>((acc, e) => {
+  const auditTotalPages = Math.max(1, Math.ceil(filtered.length / AUDIT_PAGE_SIZE))
+  const safeAuditPage = Math.min(auditPage, auditTotalPages)
+  const paginatedFiltered = filtered.slice((safeAuditPage - 1) * AUDIT_PAGE_SIZE, safeAuditPage * AUDIT_PAGE_SIZE)
+
+  const grouped = paginatedFiltered.reduce<Record<string, AuditEntry[]>>((acc, e) => {
     const date = new Date(e.timestamp).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
     if (!acc[date]) acc[date] = []
     acc[date].push(e)
@@ -451,17 +458,20 @@ export default function AuditPage() {
             </div>
           </div>
         ) : (
-          Object.entries(grouped).map(([date, dayEntries]) => (
-            <div key={date} style={{ marginBottom: 24 }}>
-              <div style={{ fontFamily: 'var(--onest)', fontSize: 11, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase' as const, color: 'var(--t3)', marginBottom: 8, paddingBottom: 6, borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span>{date}</span>
-                <span style={{ fontWeight: 400 }}>{dayEntries.length} event{dayEntries.length !== 1 ? 's' : ''}</span>
+          <>
+            {Object.entries(grouped).map(([date, dayEntries]) => (
+              <div key={date} style={{ marginBottom: 24 }}>
+                <div style={{ fontFamily: 'var(--onest)', fontSize: 11, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase' as const, color: 'var(--t3)', marginBottom: 8, paddingBottom: 6, borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span>{date}</span>
+                  <span style={{ fontWeight: 400 }}>{dayEntries.length} event{dayEntries.length !== 1 ? 's' : ''}</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {dayEntries.map(entry => <AuditCard key={entry.id} entry={entry} />)}
+                </div>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {dayEntries.map(entry => <AuditCard key={entry.id} entry={entry} />)}
-              </div>
-            </div>
-          ))
+            ))}
+            <Pagination page={safeAuditPage} totalPages={auditTotalPages} onPageChange={setAuditPage} />
+          </>
         )}
       </div>
     </div>

@@ -7,6 +7,7 @@ import { apiFetch } from '@/lib/apiFetch'
 import { useAuth } from '@/lib/auth'
 import { useModalLock } from '@/lib/useModalLock'
 import { CustomSelect } from '@/components/CustomSelect'
+import { Pagination, usePagination } from '@/components/Pagination'
 
 const COUNTRIES = [
   { code: 'EG', name: 'Egypt' },       { code: 'SA', name: 'Saudi Arabia' },
@@ -51,6 +52,7 @@ export default function LeaguesPage() {
     fetch('/api/leagues').then(r => r.json()).then(l => { setLeagues(l); setLoading(false) })
   }
   useEffect(() => { load() }, [])
+  const pg = usePagination(leagues, 20)
 
   const openCreate = () => {
     setDraft({ nameEn: '', nameAr: '', country: 'EG', season: '' })
@@ -159,7 +161,7 @@ export default function LeaguesPage() {
 
             {/* mobile card list */}
             <div style={{ display: 'none' }} className="leagues-mobile-list">
-              {leagues.map(league => (
+              {pg.paginated.map(league => (
                 <div key={league.id} style={{ padding: '14px 16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12 }}>
                   <img src={`https://flagcdn.com/20x15/${league.country.toLowerCase()}.png`} alt={league.country}
                     style={{ borderRadius: 2, boxShadow: '0 0 0 1px var(--border)', flexShrink: 0 }} />
@@ -193,7 +195,7 @@ export default function LeaguesPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {leagues.map(league => (
+                  {pg.paginated.map(league => (
                     <tr key={league.id}
                       style={{ borderBottom: '1px solid var(--border)', transition: 'background .1s' }}
                       onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg3)')}
@@ -229,6 +231,7 @@ export default function LeaguesPage() {
             </div>
           </div>
         )}
+        <Pagination page={pg.page} totalPages={pg.totalPages} onPageChange={pg.setPage} />
       </div>
 
       {/* ADD / EDIT MODAL — slides up from bottom on mobile */}

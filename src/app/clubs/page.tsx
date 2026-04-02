@@ -7,6 +7,7 @@ import { apiFetch } from '@/lib/apiFetch'
 import { useAuth } from '@/lib/auth'
 import { useModalLock } from '@/lib/useModalLock'
 import { CustomSelect } from '@/components/CustomSelect'
+import { Pagination, usePagination } from '@/components/Pagination'
 
 const COUNTRIES = [
   { code: 'EG', name: 'Egypt' },       { code: 'SA', name: 'Saudi Arabia' },
@@ -96,6 +97,7 @@ export default function ClubsPage() {
   }
 
   const leagueName = (id: string) => leagues.find(l => l.id === id)?.name.en ?? '—'
+  const pg = usePagination(clubs, 20)
 
   const inp = (err?: string): React.CSSProperties => ({
     width: '100%', height: 40,
@@ -174,7 +176,7 @@ export default function ClubsPage() {
           <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden' }}>
             {/* mobile card list — shown under 640px */}
             <div style={{ display: 'none' }} className="clubs-mobile-list">
-              {clubs.map(club => (
+              {pg.paginated.map(club => (
                 <div key={club.id} style={{
                   padding: '14px 16px', borderBottom: '1px solid var(--border)',
                   display: 'flex', alignItems: 'center', gap: 12,
@@ -214,7 +216,7 @@ export default function ClubsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {clubs.map(club => (
+                  {pg.paginated.map(club => (
                     <tr key={club.id}
                       style={{ borderBottom: '1px solid var(--border)', transition: 'background .1s' }}
                       onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg3)')}
@@ -250,6 +252,7 @@ export default function ClubsPage() {
             </div>
           </div>
         )}
+        <Pagination page={pg.page} totalPages={pg.totalPages} onPageChange={pg.setPage} />
       </div>
 
       {/* ADD / EDIT MODAL */}

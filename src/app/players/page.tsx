@@ -7,6 +7,7 @@ import type { Player, Club, PaginatedResponse, Position, PlayerStatus } from '@/
 import { AppNav } from '@/components/AppNav'
 import { useCan } from '@/lib/auth'
 import { CustomSelect } from '@/components/CustomSelect'
+import { Pagination } from '@/components/Pagination'
 
 const POS_CSS: Record<Position, React.CSSProperties> = {
   GK:  { background: 'rgba(234,179,8,.10)',  color: '#854d0e', borderColor: 'rgba(234,179,8,.35)' },
@@ -417,68 +418,7 @@ export default function PlayersPage() {
           </div>{/* /table-scroll */}
 
           {/* PAGINATION */}
-          {totalPages > 1 && (
-            <div style={{
-              borderTop: '1px solid var(--border)', padding: '12px 16px',
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              background: 'var(--bg3)',
-            }}>
-              <span style={{ fontFamily: 'var(--onest)', fontSize: 11, letterSpacing: '.1em', color: 'var(--t3)' }}>
-                {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)} OF {total} PLAYERS
-              </span>
-              <div style={{ display: 'flex', gap: 4 }}>
-                <button
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                  style={{
-                    fontFamily: 'var(--onest)', fontSize: 12, letterSpacing: '.1em',
-                    padding: '5px 12px', border: '1px solid var(--border)',
-                    borderRadius: 4, background: 'transparent', color: 'var(--t2)',
-                    cursor: page === 1 ? 'not-allowed' : 'pointer', opacity: page === 1 ? 0.4 : 1,
-                  }}
-                >
-                  ← PREV
-                </button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1)
-                  .filter(n => n === 1 || n === totalPages || Math.abs(n - page) <= 1)
-                  .reduce<(number | '…')[]>((acc, n, i, arr) => {
-                    if (i > 0 && n - (arr[i - 1] as number) > 1) acc.push('…')
-                    acc.push(n)
-                    return acc
-                  }, [])
-                  .map((n, i) => n === '…' ? (
-                    <span key={`e${i}`} style={{ padding: '5px 6px', color: 'var(--t3)', fontFamily: 'var(--onest)' }}>…</span>
-                  ) : (
-                    <button
-                      key={n}
-                      onClick={() => setPage(n as number)}
-                      style={{
-                        fontFamily: 'var(--onest)', fontSize: 12, letterSpacing: '.1em',
-                        padding: '5px 10px', borderRadius: 4, cursor: 'pointer',
-                        border: '1px solid',
-                        borderColor: page === n ? 'var(--red)' : 'var(--border)',
-                        background: page === n ? 'var(--redDim)' : 'transparent',
-                        color: page === n ? 'var(--red)' : 'var(--t2)',
-                      }}
-                    >
-                      {n}
-                    </button>
-                  ))}
-                <button
-                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                  disabled={page === totalPages}
-                  style={{
-                    fontFamily: 'var(--onest)', fontSize: 12, letterSpacing: '.1em',
-                    padding: '5px 12px', border: '1px solid var(--border)',
-                    borderRadius: 4, background: 'transparent', color: 'var(--t2)',
-                    cursor: page === totalPages ? 'not-allowed' : 'pointer', opacity: page === totalPages ? 0.4 : 1,
-                  }}
-                >
-                  NEXT →
-                </button>
-              </div>
-            </div>
-          )}
+          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
         </div>
       </div>
 
