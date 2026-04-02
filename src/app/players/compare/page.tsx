@@ -5,10 +5,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import type { Player, Club, League } from '@/types/domain'
 import { AppNav } from '@/components/AppNav'
-import { fmtDate } from '@/lib/dates'
-
-const FLAG = (c: string) => `https://flagcdn.com/20x15/${c.toLowerCase()}.png`
-const POS_FULL: Record<string, string> = { GK: 'Goalkeeper', DEF: 'Defender', MID: 'Midfielder', FWD: 'Forward' }
+import { FLAG, POS_FULL } from '@/lib/constants'
 
 function age(bd: string) {
   return Math.floor((Date.now() - new Date(bd).getTime()) / (1000 * 60 * 60 * 24 * 365.25))

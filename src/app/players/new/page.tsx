@@ -5,10 +5,10 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { Club, League, FieldSchema, Position, PlayerStatus, FieldTarget } from '@/types/domain'
 import { apiFetch } from '@/lib/apiFetch'
-import { isArabic, ARABIC_RE, LATIN_RE } from '@/lib/font'
 import { DynamicFieldInput } from '@/components/DynamicFieldInput'
 import { AppNav } from '@/components/AppNav'
 import { CustomSelect } from '@/components/CustomSelect'
+import { COUNTRIES, FLAG, POSITIONS } from '@/lib/constants'
 // ── types ─────────────────────────────────────────────────────────────────────
 
 interface Nationality {
@@ -71,39 +71,6 @@ const STEPS = [
   { label: 'Additional',        desc: 'Strengths, weaknesses, custom fields'  },
 ]
 
-const POSITIONS: { value: Position; label: string }[] = [
-  { value: 'GK',  label: 'Goalkeeper' },
-  { value: 'DEF', label: 'Defender'   },
-  { value: 'MID', label: 'Midfielder' },
-  { value: 'FWD', label: 'Forward'    },
-]
-
-const COUNTRIES = [
-  { code: 'EG', name: 'Egypt' },       { code: 'SA', name: 'Saudi Arabia' },
-  { code: 'AE', name: 'UAE' },         { code: 'QA', name: 'Qatar' },
-  { code: 'MA', name: 'Morocco' },     { code: 'DZ', name: 'Algeria' },
-  { code: 'TN', name: 'Tunisia' },     { code: 'NG', name: 'Nigeria' },
-  { code: 'GH', name: 'Ghana' },       { code: 'CM', name: 'Cameroon' },
-  { code: 'SN', name: 'Senegal' },     { code: 'CI', name: "Côte d'Ivoire" },
-  { code: 'SD', name: 'Sudan' },       { code: 'LY', name: 'Libya' },
-  { code: 'JO', name: 'Jordan' },      { code: 'IQ', name: 'Iraq' },
-  { code: 'KW', name: 'Kuwait' },      { code: 'BH', name: 'Bahrain' },
-  { code: 'OM', name: 'Oman' },        { code: 'LB', name: 'Lebanon' },
-  { code: 'GB', name: 'England' },     { code: 'ES', name: 'Spain' },
-  { code: 'DE', name: 'Germany' },     { code: 'FR', name: 'France' },
-  { code: 'IT', name: 'Italy' },       { code: 'PT', name: 'Portugal' },
-  { code: 'NL', name: 'Netherlands' }, { code: 'TR', name: 'Türkiye' },
-  { code: 'BE', name: 'Belgium' },     { code: 'GR', name: 'Greece' },
-  { code: 'AT', name: 'Austria' },     { code: 'CH', name: 'Switzerland' },
-  { code: 'DK', name: 'Denmark' },     { code: 'NO', name: 'Norway' },
-  { code: 'SE', name: 'Sweden' },      { code: 'CZ', name: 'Czechia' },
-  { code: 'PL', name: 'Poland' },      { code: 'BR', name: 'Brazil' },
-  { code: 'AR', name: 'Argentina' },   { code: 'US', name: 'United States' },
-  { code: 'CN', name: 'China' },       { code: 'JP', name: 'Japan' },
-  { code: 'KR', name: 'South Korea' }, { code: 'AU', name: 'Australia' },
-]
-
-const FLAG = (code: string) => `https://flagcdn.com/20x15/${code.toLowerCase()}.png`
 
 function ageGroup(birthdate: string): number | null {
   if (!birthdate) return null

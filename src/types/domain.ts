@@ -46,11 +46,10 @@ export interface PlayerNationality {
 
 export interface ClubHistoryEntry {
   clubId: string;
-  clubName: BilingualString; // denormalised for display
-  joinDate: string; // ISO date string
-  leaveDate: string | null;
-  contractFileUrl: string | null;
-  isCurrent: boolean; // derived: leaveDate === null
+  clubName: string;
+  from: string | null;
+  to: string | null;
+  isCurrent: boolean;
 }
 
 export interface Player {

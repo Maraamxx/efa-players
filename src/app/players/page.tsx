@@ -8,6 +8,7 @@ import { AppNav } from '@/components/AppNav'
 import { useCan } from '@/lib/auth'
 import { CustomSelect } from '@/components/CustomSelect'
 import { Pagination } from '@/components/Pagination'
+import { FLAG } from '@/lib/constants'
 
 const POS_CSS: Record<Position, React.CSSProperties> = {
   GK:  { background: 'rgba(234,179,8,.10)',  color: '#854d0e', borderColor: 'rgba(234,179,8,.35)' },
@@ -22,7 +23,6 @@ const STATUS_CSS: Record<PlayerStatus, React.CSSProperties> = {
   suspended: { background: 'rgba(200,16,46,.08)',  color: '#C8102E', borderColor: 'rgba(200,16,46,.25)'  },
 }
 
-const FLAG = (code: string) => `https://flagcdn.com/20x15/${code.toLowerCase()}.png`
 
 function useDebounce<T>(value: T, delay = 300): T {
   const [d, setD] = useState(value)

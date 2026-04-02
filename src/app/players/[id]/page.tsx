@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { Player, Club, League, PlayerMatch, PlayerAnalysis, FieldSchema, FieldType, FieldTarget, MediaAsset } from '@/types/domain'
@@ -16,12 +16,10 @@ import { useToast } from '@/components/Toast'
 import { useEscKey } from '@/lib/useEscKey'
 import { ProfileSkeleton, SkeletonStyles } from '@/components/Skeleton'
 import { CustomSelect } from '@/components/CustomSelect'
+import { FLAG, POS_FULL, FOOT, COUNTRIES } from '@/lib/constants'
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
-const FLAG    = (c: string) => `https://flagcdn.com/20x15/${c.toLowerCase()}.png`
-const POS_FULL = { GK: 'Goalkeeper', DEF: 'Defender', MID: 'Midfielder', FWD: 'Forward' }
-const FOOT     = { left: 'Left', right: 'Right', both: 'Both' }
 
 function age(bd: string) {
   return Math.floor((Date.now() - new Date(bd).getTime()) / (1000 * 60 * 60 * 24 * 365.25))
@@ -589,30 +587,6 @@ function TagInput({ tags, onChange, variant }: {
 
 // ── COUNTRIES ─────────────────────────────────────────────────────────────────
 
-const COUNTRIES = [
-  { code: 'EG', name: 'Egypt' },       { code: 'SA', name: 'Saudi Arabia' },
-  { code: 'AE', name: 'UAE' },         { code: 'QA', name: 'Qatar' },
-  { code: 'MA', name: 'Morocco' },     { code: 'DZ', name: 'Algeria' },
-  { code: 'TN', name: 'Tunisia' },     { code: 'NG', name: 'Nigeria' },
-  { code: 'GH', name: 'Ghana' },       { code: 'CM', name: 'Cameroon' },
-  { code: 'SN', name: 'Senegal' },     { code: 'CI', name: "Côte d'Ivoire" },
-  { code: 'SD', name: 'Sudan' },       { code: 'LY', name: 'Libya' },
-  { code: 'JO', name: 'Jordan' },      { code: 'IQ', name: 'Iraq' },
-  { code: 'KW', name: 'Kuwait' },      { code: 'BH', name: 'Bahrain' },
-  { code: 'OM', name: 'Oman' },        { code: 'LB', name: 'Lebanon' },
-  { code: 'GB', name: 'England' },     { code: 'ES', name: 'Spain' },
-  { code: 'DE', name: 'Germany' },     { code: 'FR', name: 'France' },
-  { code: 'IT', name: 'Italy' },       { code: 'PT', name: 'Portugal' },
-  { code: 'NL', name: 'Netherlands' }, { code: 'TR', name: 'Türkiye' },
-  { code: 'BE', name: 'Belgium' },     { code: 'GR', name: 'Greece' },
-  { code: 'AT', name: 'Austria' },     { code: 'CH', name: 'Switzerland' },
-  { code: 'DK', name: 'Denmark' },     { code: 'NO', name: 'Norway' },
-  { code: 'SE', name: 'Sweden' },      { code: 'CZ', name: 'Czechia' },
-  { code: 'PL', name: 'Poland' },      { code: 'BR', name: 'Brazil' },
-  { code: 'AR', name: 'Argentina' },   { code: 'US', name: 'United States' },
-  { code: 'CN', name: 'China' },       { code: 'JP', name: 'Japan' },
-  { code: 'KR', name: 'South Korea' }, { code: 'AU', name: 'Australia' },
-]
 
 
 // ── MAIN PAGE ─────────────────────────────────────────────────────────────────
@@ -902,10 +876,12 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
     </div>
   )
 
-  const totalGoals   = matches.reduce((s, m) => s + m.goalsScored, 0)
-  const totalAssists = matches.reduce((s, m) => s + m.assists, 0)
-  const totalMins    = matches.reduce((s, m) => s + m.minutesPlayed, 0)
-  const recentForm   = [...matches].slice(0, 8).reverse()
+  const { totalGoals, totalAssists, totalMins, recentForm } = useMemo(() => ({
+    totalGoals:   matches.reduce((s, m) => s + m.goalsScored, 0),
+    totalAssists: matches.reduce((s, m) => s + m.assists, 0),
+    totalMins:    matches.reduce((s, m) => s + m.minutesPlayed, 0),
+    recentForm:   [...matches].slice(0, 8).reverse(),
+  }), [matches])
 
   return (<>
     <div style={{ minHeight: '100vh', background: 'var(--bg2)', overflowX: 'hidden' }}>
