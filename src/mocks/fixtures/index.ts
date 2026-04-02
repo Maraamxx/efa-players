@@ -2,57 +2,9 @@ import type { Club, FieldSchema, League, Player, PlayerMatch, Role, SystemUser }
 
 const NOW = new Date().toISOString();
 
-export const leagues: League[] = [
-  {
-    id: "lg-1",
-    name: { ar: "الدوري المصري الممتاز", en: "Egyptian Premier League" },
-    country: "EG",
-    season: "2025/26",
-    isActive: true,
-  },
-  {
-    id: "lg-2",
-    name: { ar: "دوري المحترفين", en: "Professional League" },
-    country: "EG",
-    season: "2025/26",
-    isActive: true,
-  },
-];
+export const leagues: League[] = [];
 
-export const clubs: Club[] = [
-  {
-    id: "cl-1",
-    name: { ar: "الأهلي", en: "Al Ahly" },
-    leagueId: "lg-1",
-    country: "EG",
-    logoUrl: null,
-    isActive: true,
-  },
-  {
-    id: "cl-2",
-    name: { ar: "الزمالك", en: "Zamalek" },
-    leagueId: "lg-1",
-    country: "EG",
-    logoUrl: null,
-    isActive: true,
-  },
-  {
-    id: "cl-3",
-    name: { ar: "بيراميدز", en: "Pyramids FC" },
-    leagueId: "lg-1",
-    country: "EG",
-    logoUrl: null,
-    isActive: true,
-  },
-  {
-    id: "cl-4",
-    name: { ar: "إنبي", en: "ENPPI" },
-    leagueId: "lg-2",
-    country: "EG",
-    logoUrl: null,
-    isActive: true,
-  },
-];
+export const clubs: Club[] = [];
 
 export const players: Player[] = [];
 

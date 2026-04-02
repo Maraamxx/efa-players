@@ -18,7 +18,7 @@ import type {
   SystemUser,
 } from "@/types/domain";
 
-const STORE_VERSION = 8;
+const STORE_VERSION = 9;
 // Stored on globalThis so it survives Next.js hot module reloads in dev
 // In production this lives for the lifetime of the server process
 
