@@ -1,30 +1,6 @@
-import type { Club, FieldSchema, League, Player, PlayerMatch, Position, PlayerStatus, Role, SystemUser } from "@/types/domain";
+import type { Club, FieldSchema, League, Player, PlayerMatch, Role, SystemUser } from "@/types/domain";
 
 const NOW = new Date().toISOString();
-
-const positions: Position[] = ["GK", "DEF", "MID", "FWD"];
-const statuses: PlayerStatus[] = ["active", "active", "active", "inactive", "suspended"];
-const feet = ["left", "right", "both"] as const;
-
-const FIRST_NAMES_EN = ["Mohamed", "Ahmed", "Omar", "Youssef", "Ali", "Karim", "Ibrahim", "Hossam"];
-const LAST_NAMES_EN = ["Abdallah", "Hassan", "Mahmoud", "Fathi", "Ashraf", "Sayed", "Gaber", "Nabil"];
-const FIRST_NAMES_AR = ["محمد", "أحمد", "عمر", "يوسف", "علي", "كريم", "إبراهيم", "حسام"];
-const LAST_NAMES_AR = ["عبدالله", "حسن", "محمود", "فتحي", "أشرف", "السيد", "جابر", "نبيل"];
-
-const COMPETITIONS = ["Egyptian Premier League", "Egypt Cup", "CAF Champions League", null, "CAF Confederation Cup", null];
-const MATCH_NAMES = [
-  "Al Ahly vs Zamalek",
-  "Egypt U20 vs Morocco U20",
-  "CAF Champions League QF",
-  "Egypt Cup Round of 16",
-  "Pyramids FC vs Smouha",
-  "CAF Confederation Cup SF",
-  "Egyptian Premier League Derby",
-  "Al Masry vs ENPPI",
-];
-
-const toDate = (year: number, month: number, day: number) =>
-  `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
 export const leagues: League[] = [
   {
@@ -78,79 +54,9 @@ export const clubs: Club[] = [
   },
 ];
 
-export const players: Player[] = Array.from({ length: 40 }, (_, i) => {
-  const index = i + 1;
-  const club = clubs[i % clubs.length];
-  const first = i % FIRST_NAMES_EN.length;
-  const last = (i + 3) % LAST_NAMES_EN.length;
-  const birthYear = 2003 + (i % 8);
-  const position = positions[i % positions.length];
-  const status = statuses[i % statuses.length];
+export const players: Player[] = [];
 
-  return {
-    id: `player-${index}`,
-    name: {
-      en: `${FIRST_NAMES_EN[first]} ${LAST_NAMES_EN[last]}`,
-      ar: `${FIRST_NAMES_AR[first]} ${LAST_NAMES_AR[last]}`,
-    },
-    birthdate: toDate(birthYear, ((i % 12) + 1), ((i % 27) + 1)),
-    ageGroup: birthYear,
-    nationalities: [
-      {
-        countryCode: "EG",
-        isPrimary: true,
-        passportNumber: `P${String(index).padStart(7, "0")}`,
-      },
-      ...(i % 5 === 0
-        ? [
-            {
-              countryCode: "MA",
-              isPrimary: false,
-              passportNumber: null,
-            },
-          ]
-        : []),
-    ],
-    currentClubId: club.id,
-    currentLeagueId: club.leagueId,
-    position,
-
-    preferredFoot: feet[i % feet.length],
-    height: 168 + (i % 24),
-    idNumber: `29800000000${String(index).padStart(2, "0")}`,
-    passportNumber: i % 3 === 0 ? `A${String(index).padStart(8, "0")}` : null,
-    photoUrl: `https://api.dicebear.com/7.x/personas/svg?seed=${index}`,
-    contractStart: toDate(2024, (i % 12) + 1, 1),
-    contractEnd:   i % 4 === 0 ? null : toDate(2026 + (i % 3), (i % 12) + 1, 1),
-    fatherName: `${FIRST_NAMES_AR[(i + 2) % FIRST_NAMES_AR.length]} ${LAST_NAMES_AR[(i + 1) % LAST_NAMES_AR.length]}`,
-    fatherPhone: `+2010${String(1000000 + index).padStart(7, "0")}`,
-    fatherEmail: i % 4 === 0 ? `guardian${index}@efa.local` : null,
-    strengths: [position === "MID" ? "Passing" : "Positioning", "Discipline"],
-    weaknesses: [position === "GK" ? "Distribution" : "Aerial duels"],
-    status,
-    clubHistory: [],
-    dynamicFieldValues: [],
-    createdAt: NOW,
-    updatedAt: NOW,
-  };
-});
-
-export const matches: PlayerMatch[] = players.flatMap((player, pIndex) =>
-  Array.from({ length: 6 }, (_, mIndex) => ({
-    id: `match-${player.id}-${mIndex + 1}`,
-    playerId: player.id,
-    matchName: MATCH_NAMES[(pIndex + mIndex) % MATCH_NAMES.length],
-    matchDate: toDate(2025, ((mIndex + pIndex) % 12) + 1, ((mIndex * 4 + pIndex) % 27) + 1),
-    competition: COMPETITIONS[(pIndex + mIndex) % COMPETITIONS.length] as string | null,
-    minutesPlayed: 45 + ((mIndex * 9 + pIndex) % 51),
-    goalsScored: (pIndex + mIndex) % 3 === 0 ? 1 : 0,
-    assists: (pIndex + mIndex) % 4 === 0 ? 1 : 0,
-    notes: mIndex % 3 === 0 ? "Solid overall performance." : null,
-    videos: [],
-    createdAt: NOW,
-    dynamicFieldValues: [],
-  })),
-);
+export const matches: PlayerMatch[] = [];
 
 export const roles: Role[] = [
   {

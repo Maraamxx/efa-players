@@ -7,6 +7,7 @@ import type { Club, League, FieldSchema, Position, PlayerStatus, FieldTarget } f
 import { apiFetch } from '@/lib/apiFetch'
 import { isArabic, ARABIC_RE, LATIN_RE } from '@/lib/font'
 import { DynamicFieldInput } from '@/components/DynamicFieldInput'
+import { AppNav } from '@/components/AppNav'
 // ── types ─────────────────────────────────────────────────────────────────────
 
 interface Nationality {
@@ -287,30 +288,6 @@ function TagInput({
   )
 }
 
-// ── nav ───────────────────────────────────────────────────────────────────────
-
-function Nav() {
-  return (
-    <nav style={{
-      height: 50, background: 'var(--bg2)', borderBottom: '1px solid var(--border)',
-      display: 'flex', alignItems: 'center', padding: '0 24px',
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginRight: 'auto' }}>
-        <img src="/efa-logo.png" alt="EFA" style={{ height: 32, width: 32, objectFit: 'contain' }} />
-        <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
-          <span style={{ fontFamily: 'var(--bebas)', fontSize: 15, letterSpacing: '.18em', color: 'var(--t1)' }}>EFA PLAYERS</span>
-          <span style={{ fontFamily: 'var(--onest)', fontSize: 9, letterSpacing: '.12em', color: 'var(--t3)' }}>PLAYER MANAGEMENT</span>
-        </div>
-      </div>
-      {['Players', 'Clubs', 'Leagues', 'Users', 'Audit'].map(n => (
-        <div key={n} style={{
-          fontFamily: 'var(--onest)', fontSize: 13, letterSpacing: '.12em',
-          color: n === 'Players' ? 'var(--t1)' : 'var(--t3)', padding: '5px 14px', cursor: 'pointer',
-        }}>{n}</div>
-      ))}
-    </nav>
-  )
-}
 
 // ── main page ─────────────────────────────────────────────────────────────────
 
@@ -518,7 +495,7 @@ router.push(`/players/${created.id}`)
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg2)' }}>
-      <Nav />
+      <AppNav />
 
       {/* page header */}
       <div className="page-header" style={{ background: 'var(--bg)', borderBottom: '1px solid var(--border)', flexDirection: 'column', alignItems: 'flex-start', gap: 0 }}>
@@ -770,9 +747,9 @@ router.push(`/players/${created.id}`)
                     borderRadius: 'var(--r)', padding: '14px 16px',
                     borderLeft: nat.isPrimary ? '3px solid var(--red)' : '3px solid transparent',
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
                       {/* country */}
-                      <div style={{ flex: 1 }}>
+                      <div style={{ flex: 1, minWidth: 150 }}>
                         <FieldLabel required>COUNTRY</FieldLabel>
                         {isEgyptian ? (
                           <div style={{ height: 38, border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '0 12px', display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--onest)', fontSize: 13, color: 'var(--t2)' }}>

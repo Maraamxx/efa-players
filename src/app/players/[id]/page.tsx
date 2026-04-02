@@ -2384,9 +2384,9 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
 
       {/* ── VIDEO PLAYER MODAL ── */}
       {openPlayer && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 60, background: 'rgba(0,0,0,.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+        <div className="video-modal-overlay" style={{ position: 'fixed', inset: 0, zIndex: 60, background: 'rgba(0,0,0,.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
           onClick={e => { if (e.target === e.currentTarget) setOpenPlayer(null) }}>
-          <div style={{ width: '100%', maxWidth: 1140, animation: 'modalIn .2s ease' }}>
+          <div style={{ width: '100%', maxWidth: 1140 }}>
             <VideoPlayer
               asset={openPlayer}
               onNoteAdded={note => {

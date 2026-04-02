@@ -179,7 +179,7 @@ export function VideoPlayer({ asset, onNoteAdded, onNoteDeleted, currentUser = '
           ref={containerRef}
           onMouseMove={resetControlsTimer}
           onClick={togglePlay}
-          style={{ background: '#000', flex: 1, minHeight: 0, position: 'relative', cursor: 'pointer', overflow: 'hidden' }}
+          style={{ background: '#000', position: 'relative', cursor: 'pointer', overflow: 'hidden', aspectRatio: '16/9', maxHeight: 'min(520px, 60vh)' }}
         >
           <video
             ref={videoRef}
@@ -313,7 +313,7 @@ export function VideoPlayer({ asset, onNoteAdded, onNoteDeleted, currentUser = '
                 : <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
               }
             </button>
-            <div onClick={changeVolume}
+            <div className="video-volume-bar" onClick={changeVolume}
               style={{ width: 56, height: 3, background: 'rgba(255,255,255,.15)', borderRadius: 2, cursor: 'pointer', position: 'relative' }}>
               <div style={{ width: `${muted ? 0 : volume * 100}%`, height: '100%', background: 'rgba(255,255,255,.6)', borderRadius: 2 }} />
             </div>
@@ -321,7 +321,7 @@ export function VideoPlayer({ asset, onNoteAdded, onNoteDeleted, currentUser = '
             <div style={{ flex: 1 }} />
 
             {/* speed */}
-            <div style={{ display: 'flex', gap: 3 }}>
+            <div className="video-speed-btns" style={{ display: 'flex', gap: 3 }}>
               {SPEEDS.map(s => (
                 <button key={s} onClick={() => changeSpeed(s)} style={{
                   fontFamily: 'var(--onest)', fontSize: 10, fontWeight: 700,
@@ -337,7 +337,7 @@ export function VideoPlayer({ asset, onNoteAdded, onNoteDeleted, currentUser = '
             </div>
 
             {/* quality */}
-            <div style={{ position: 'relative' }}>
+            <div className="video-quality-btn" style={{ position: 'relative' }}>
               <button onClick={() => setShowQuality(q => !q)} style={{
                 fontFamily: 'var(--onest)', fontSize: 10, fontWeight: 700,
                 padding: '3px 8px', borderRadius: 4, cursor: 'pointer',
