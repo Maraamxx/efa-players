@@ -47,6 +47,10 @@ export default function ClubsPage() {
   const [saving,      setSaving]      = useState(false)
   const [draft,       setDraft]       = useState({ nameEn: '', nameAr: '', leagueId: '', country: 'EG' })
   const [errors,      setErrors]      = useState<Record<string, string>>({})
+  const [search,      setSearch]      = useState('')
+  const [filterCountry, setFilterCountry] = useState('')
+  const [filterLeague,  setFilterLeague]  = useState('')
+  const [sortBy,        setSortBy]        = useState<'name' | 'country' | 'league'>('name')
   useModalLock(showForm || !!deleteClub)
 
   const load = () => {
@@ -97,7 +101,20 @@ export default function ClubsPage() {
   }
 
   const leagueName = (id: string) => leagues.find(l => l.id === id)?.name.en ?? '—'
-  const pg = usePagination(clubs, 20)
+
+  const filtered = clubs.filter(c => {
+    if (search && !c.name.en.toLowerCase().includes(search.toLowerCase()) && !c.name.ar.includes(search)) return false
+    if (filterCountry && c.country !== filterCountry) return false
+    if (filterLeague && c.leagueId !== filterLeague) return false
+    return true
+  }).sort((a, b) => {
+    if (sortBy === 'country') return a.country.localeCompare(b.country)
+    if (sortBy === 'league') return leagueName(a.leagueId).localeCompare(leagueName(b.leagueId))
+    return a.name.en.localeCompare(b.name.en)
+  })
+  const pg = usePagination(filtered, 20)
+  const uniqueCountries = [...new Set(clubs.map(c => c.country))].sort()
+  const hasFilters = !!search || !!filterCountry || !!filterLeague
 
   const inp = (err?: string): React.CSSProperties => ({
     width: '100%', height: 40,
@@ -157,8 +174,35 @@ export default function ClubsPage() {
         )}
       </div>
 
+      {/* FILTER BAR */}
+      <div style={{ padding: '12px 20px', maxWidth: 960, margin: '0 auto', display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search clubs…"
+          style={{ flex: '1 1 180px', height: 36, border: '1px solid var(--border2)', borderRadius: 5, background: 'var(--bg)', fontFamily: 'var(--onest)', fontSize: 12, color: 'var(--t1)', padding: '0 10px', outline: 'none' }} />
+        <div style={{ flex: '0 1 160px' }}>
+          <CustomSelect value={filterCountry} onChange={setFilterCountry} searchable
+            options={[{ value: '', label: 'All Countries' }, ...uniqueCountries.map(c => ({ value: c, label: countryName(c), flag: FLAG(c) }))]} />
+        </div>
+        <div style={{ flex: '0 1 200px' }}>
+          <CustomSelect value={filterLeague} onChange={setFilterLeague}
+            options={[{ value: '', label: 'All Leagues' }, ...(filterCountry ? leagues.filter(l => l.country === filterCountry) : leagues).map(l => ({ value: l.id, label: l.name.en, flag: FLAG(l.country) }))]} />
+        </div>
+        <div style={{ flex: '0 1 140px' }}>
+          <CustomSelect value={sortBy} onChange={v => setSortBy(v as any)} searchable={false}
+            options={[{ value: 'name', label: 'Sort: Name' }, { value: 'country', label: 'Sort: Country' }, { value: 'league', label: 'Sort: League' }]} />
+        </div>
+        {hasFilters && (
+          <button onClick={() => { setSearch(''); setFilterCountry(''); setFilterLeague('') }}
+            style={{ fontFamily: 'var(--onest)', fontSize: 11, fontWeight: 600, padding: '8px 12px', border: '1px solid var(--border2)', borderRadius: 5, background: 'transparent', color: 'var(--t3)', cursor: 'pointer' }}>
+            Clear
+          </button>
+        )}
+        <span style={{ fontFamily: 'var(--onest)', fontSize: 11, color: 'var(--t3)', whiteSpace: 'nowrap' }}>
+          {filtered.length} club{filtered.length !== 1 ? 's' : ''}
+        </span>
+      </div>
+
       {/* CONTENT */}
-      <div style={{ padding: '16px 20px', maxWidth: 960, margin: '0 auto' }}>
+      <div style={{ padding: '0 20px 16px', maxWidth: 960, margin: '0 auto' }}>
         {loading ? (
           <div style={{ display: 'flex', justifyContent: 'center', padding: 56 }}>
             <div style={{ width: 24, height: 24, border: '2px solid #C8102E', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin .7s linear infinite' }} />
