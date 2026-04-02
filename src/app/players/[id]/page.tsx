@@ -1214,32 +1214,13 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
           >
             {(editing) => (
               <div>
-                <InfoRow label="Club"          editing={editing}
-                  display={
-                    <div>
-                      <div style={{ fontFamily: 'var(--onest)', fontSize: 13, fontWeight: 500, color: 'var(--t1)' }}>
-                        {clubName(player.currentClubId)}
-                      </div>
-                      {clubs.find(c => c.id === player.currentClubId)?.name.ar && (
-                        <div style={{ fontFamily: 'var(--amiri)', fontSize: 13, color: 'var(--t3)', direction: 'rtl' as const, textAlign: 'left' as const, marginTop: 1 }}>
-                          {clubs.find(c => c.id === player.currentClubId)?.name.ar}
-                        </div>
-                      )}
-                    </div>
-                  }
-                  edit={
-                    <CustomSelect value={draftFootball.currentClubId ?? ''} onChange={v => setDraftFootball((d: any) => ({ ...d, currentClubId: v }))}
-                      options={[{ value: '', label: 'Select club…' }, ...clubs.map(c => ({ value: c.id, label: c.name.en }))]}
-                      placeholder="Select club…" />
-                  }
-                />
                 <InfoRow label="League"        editing={editing}
                   display={
                     <div>
                       <div style={{ fontFamily: 'var(--onest)', fontSize: 13, fontWeight: 500, color: 'var(--t1)' }}>
                         {leagueName(player.currentLeagueId)}
                       </div>
-                      {leagues.find(l => l.id === player.currentLeagueId)?.name.ar && (
+                      {leagues.find(l => l.id === player.currentLeagueId)?.name.ar && leagues.find(l => l.id === player.currentLeagueId)?.name.ar !== '-' && (
                         <div style={{ fontFamily: 'var(--amiri)', fontSize: 13, color: 'var(--t3)', direction: 'rtl' as const, textAlign: 'left' as const, marginTop: 1 }}>
                           {leagues.find(l => l.id === player.currentLeagueId)?.name.ar}
                         </div>
@@ -1247,9 +1228,36 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
                     </div>
                   }
                   edit={
-                    <CustomSelect value={draftFootball.currentLeagueId ?? ''} onChange={v => setDraftFootball((d: any) => ({ ...d, currentLeagueId: v }))}
+                    <CustomSelect value={draftFootball.currentLeagueId ?? ''} onChange={v => {
+                      setDraftFootball((d: any) => ({ ...d, currentLeagueId: v, currentClubId: '' }))
+                    }}
                       options={[{ value: '', label: 'Select league…' }, ...leagues.map(l => ({ value: l.id, label: l.name.en }))]}
                       placeholder="Select league…" />
+                  }
+                />
+                <InfoRow label="Club"          editing={editing}
+                  display={
+                    <div>
+                      <div style={{ fontFamily: 'var(--onest)', fontSize: 13, fontWeight: 500, color: 'var(--t1)' }}>
+                        {clubName(player.currentClubId)}
+                      </div>
+                      {clubs.find(c => c.id === player.currentClubId)?.name.ar && clubs.find(c => c.id === player.currentClubId)?.name.ar !== '-' && (
+                        <div style={{ fontFamily: 'var(--amiri)', fontSize: 13, color: 'var(--t3)', direction: 'rtl' as const, textAlign: 'left' as const, marginTop: 1 }}>
+                          {clubs.find(c => c.id === player.currentClubId)?.name.ar}
+                        </div>
+                      )}
+                    </div>
+                  }
+                  edit={
+                    draftFootball.currentLeagueId ? (
+                      <CustomSelect value={draftFootball.currentClubId ?? ''} onChange={v => setDraftFootball((d: any) => ({ ...d, currentClubId: v }))}
+                        options={[{ value: '', label: 'Select club…' }, ...clubs.filter(c => c.leagueId === draftFootball.currentLeagueId).map(c => ({ value: c.id, label: c.name.en }))]}
+                        placeholder="Select club…" />
+                    ) : (
+                      <div style={{ height: 34, border: '1px solid var(--border)', borderRadius: 'var(--r)', background: 'var(--bg3)', display: 'flex', alignItems: 'center', padding: '0 12px', fontFamily: 'var(--onest)', fontSize: 12, color: 'var(--t4)' }}>
+                        Select a league first
+                      </div>
+                    )
                   }
                 />
                 <InfoRow label="Position"      editing={editing}

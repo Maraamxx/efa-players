@@ -675,16 +675,28 @@ router.push(`/players/${created.id}`)
                   {err('height')}
                 </div>
                 <div style={fieldWrap}>
-                  <FieldLabel required>CURRENT CLUB</FieldLabel>
-                  <CustomSelect value={form.currentClubId} onChange={v => set('currentClubId', v)}
-                    options={clubs.map(c => ({ value: c.id, label: c.name.en }))} placeholder="Select club" />
-                  {err('currentClubId')}
-                </div>
-                <div style={fieldWrap}>
                   <FieldLabel required>CURRENT LEAGUE</FieldLabel>
-                  <CustomSelect value={form.currentLeagueId} onChange={v => set('currentLeagueId', v)}
+                  <CustomSelect value={form.currentLeagueId} onChange={v => {
+                    set('currentLeagueId', v)
+                    if (form.currentClubId) {
+                      const club = clubs.find(c => c.id === form.currentClubId)
+                      if (club && club.leagueId !== v) set('currentClubId', '')
+                    }
+                  }}
                     options={leagues.map(l => ({ value: l.id, label: l.name.en }))} placeholder="Select league" />
                   {err('currentLeagueId')}
+                </div>
+                <div style={fieldWrap}>
+                  <FieldLabel required>CURRENT CLUB</FieldLabel>
+                  {form.currentLeagueId ? (
+                    <CustomSelect value={form.currentClubId} onChange={v => set('currentClubId', v)}
+                      options={clubs.filter(c => c.leagueId === form.currentLeagueId).map(c => ({ value: c.id, label: c.name.en }))} placeholder="Select club" />
+                  ) : (
+                    <div style={{ height: 40, border: '1px solid var(--border)', borderRadius: 'var(--r)', background: 'var(--bg3)', display: 'flex', alignItems: 'center', padding: '0 12px', fontFamily: 'var(--onest)', fontSize: 12, color: 'var(--t4)' }}>
+                      Select a league first
+                    </div>
+                  )}
+                  {err('currentClubId')}
                 </div>
               </div>
 
