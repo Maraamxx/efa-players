@@ -7,6 +7,7 @@ import { AppNav } from '@/components/AppNav'
 import { useAuth } from '@/lib/auth'
 import { apiFetch } from '@/lib/apiFetch'
 import { useModalLock } from '@/lib/useModalLock'
+import { Pagination, usePagination } from '@/components/Pagination'
 
 // Resources and which actions apply to each
 const RESOURCE_ACTIONS: Record<PermissionResource, PermissionAction[]> = {
@@ -158,12 +159,23 @@ export default function RolesPage() {
   const [saving,  setSaving]  = useState(false)
   const [draft,   setDraft]   = useState({ ...BLANK_DRAFT })
   const [errors,  setErrors]  = useState<Record<string, string>>({})
+  const [search, setSearch] = useState('')
+  const [filterType, setFilterType] = useState<'' | 'system' | 'custom'>('')
 
   const load = () => {
     fetch('/api/roles').then(r => r.json()).then(d => { setRoles(d); setLoading(false) })
   }
   useEffect(() => { load() }, [])
   useEffect(() => { if (!authLoading && !can('roles', 'view')) router.replace('/players') }, [authLoading])
+
+  const filtered = roles.filter(r => {
+    if (search && !r.name.toLowerCase().includes(search.toLowerCase())) return false
+    if (filterType === 'system' && !r.isSystem) return false
+    if (filterType === 'custom' && r.isSystem) return false
+    return true
+  })
+  const pg = usePagination(filtered, 10)
+  const hasFilters = !!search || !!filterType
 
   const openCreate = () => {
     setDraft({ ...BLANK_DRAFT, permissions: [] })
@@ -236,14 +248,41 @@ export default function RolesPage() {
         )}
       </div>
 
-      <div className="roles-content" style={{ padding: '24px', maxWidth: 900, margin: '0 auto' }}>
+      {/* FILTER BAR */}
+      <div style={{ padding: '12px 24px', maxWidth: 900, margin: '0 auto', display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search roles…"
+          style={{ flex: '1 1 180px', height: 36, border: '1px solid var(--border2)', borderRadius: 5, background: 'var(--bg)', fontFamily: 'var(--onest)', fontSize: 12, color: 'var(--t1)', padding: '0 10px', outline: 'none' }} />
+        <div style={{ display: 'flex', gap: 4 }}>
+          {(['', 'system', 'custom'] as const).map(t => (
+            <button key={t} onClick={() => setFilterType(t)}
+              style={{
+                fontFamily: 'var(--onest)', fontSize: 11, fontWeight: 600, padding: '7px 12px', borderRadius: 5, cursor: 'pointer',
+                border: `1px solid ${filterType === t ? 'var(--red)' : 'var(--border2)'}`,
+                background: filterType === t ? 'var(--redDim)' : 'transparent',
+                color: filterType === t ? 'var(--red)' : 'var(--t3)',
+                transition: 'all .12s',
+              }}>
+              {t === '' ? 'All' : t === 'system' ? 'System' : 'Custom'}
+            </button>
+          ))}
+        </div>
+        {hasFilters && (
+          <button onClick={() => { setSearch(''); setFilterType('') }}
+            style={{ fontFamily: 'var(--onest)', fontSize: 11, fontWeight: 600, padding: '7px 12px', border: '1px solid var(--border2)', borderRadius: 5, background: 'transparent', color: 'var(--t3)', cursor: 'pointer' }}>
+            Clear
+          </button>
+        )}
+        <span style={{ fontFamily: 'var(--onest)', fontSize: 11, color: 'var(--t3)' }}>{filtered.length} role{filtered.length !== 1 ? 's' : ''}</span>
+      </div>
+
+      <div className="roles-content" style={{ padding: '0 24px 24px', maxWidth: 900, margin: '0 auto' }}>
         {loading ? (
           <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}>
             <div style={{ width: 24, height: 24, border: '2px solid var(--red)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin .7s linear infinite' }} />
           </div>
-        ) : (
+        ) : (<>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {roles.map(role => (
+            {pg.paginated.map(role => (
               <div key={role.id} style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
                 {/* card header */}
                 <div className="roles-card-header" style={{ padding: '16px 18px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', gap: 12, flexWrap: 'wrap' }}>
@@ -281,7 +320,8 @@ export default function RolesPage() {
               </div>
             ))}
           </div>
-        )}
+          <Pagination page={pg.page} totalPages={pg.totalPages} onPageChange={pg.setPage} />
+        </>)}
       </div>
 
       {/* CREATE / EDIT MODAL */}

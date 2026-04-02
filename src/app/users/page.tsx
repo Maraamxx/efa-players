@@ -8,6 +8,7 @@ import { AppNav } from '@/components/AppNav'
 import { useAuth } from '@/lib/auth'
 import { apiFetch } from '@/lib/apiFetch'
 import { useModalLock } from '@/lib/useModalLock'
+import { Pagination, usePagination } from '@/components/Pagination'
 
 interface UserWithRole {
   id:        string
@@ -34,6 +35,9 @@ export default function UsersPage() {
   const [saving,  setSaving]  = useState(false)
   const [draft,   setDraft]   = useState({ ...BLANK_DRAFT })
   const [errors,  setErrors]  = useState<Record<string, string>>({})
+  const [search, setSearch] = useState('')
+  const [filterRole, setFilterRole] = useState('')
+  const [filterActive, setFilterActive] = useState<'' | 'true' | 'false'>('')
   useModalLock(showForm || !!deleteUser)
 
   const load = () => {
@@ -43,6 +47,16 @@ export default function UsersPage() {
     ]).then(([u, r]) => { setUsers(u); setRoles(r); setLoading(false) })
   }
   useEffect(() => { load() }, [])
+
+  const filtered = users.filter(u => {
+    if (search && !u.nameEn.toLowerCase().includes(search.toLowerCase()) && !u.email.toLowerCase().includes(search.toLowerCase())) return false
+    if (filterRole && u.roleId !== filterRole) return false
+    if (filterActive === 'true' && !u.isActive) return false
+    if (filterActive === 'false' && u.isActive) return false
+    return true
+  })
+  const pg = usePagination(filtered, 15)
+  const hasFilters = !!search || !!filterRole || !!filterActive
   useEffect(() => { if (!authLoading && !can('users', 'view')) router.replace('/players') }, [authLoading])
 
   const openCreate = () => {
@@ -127,7 +141,28 @@ export default function UsersPage() {
         )}
       </div>
 
-      <div style={{ padding: '24px', maxWidth: 900, margin: '0 auto' }}>
+      {/* FILTER BAR */}
+      <div style={{ padding: '12px 24px', maxWidth: 900, margin: '0 auto', display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name or email…"
+          style={{ flex: '1 1 180px', height: 36, border: '1px solid var(--border2)', borderRadius: 5, background: 'var(--bg)', fontFamily: 'var(--onest)', fontSize: 12, color: 'var(--t1)', padding: '0 10px', outline: 'none' }} />
+        <div style={{ flex: '0 1 160px' }}>
+          <CustomSelect value={filterRole} onChange={setFilterRole} searchable={false}
+            options={[{ value: '', label: 'All Roles' }, ...roles.map(r => ({ value: r.id, label: r.name }))]} />
+        </div>
+        <div style={{ flex: '0 1 130px' }}>
+          <CustomSelect value={filterActive} onChange={v => setFilterActive(v as any)} searchable={false}
+            options={[{ value: '', label: 'All Status' }, { value: 'true', label: 'Active' }, { value: 'false', label: 'Inactive' }]} />
+        </div>
+        {hasFilters && (
+          <button onClick={() => { setSearch(''); setFilterRole(''); setFilterActive('') }}
+            style={{ fontFamily: 'var(--onest)', fontSize: 11, fontWeight: 600, padding: '8px 12px', border: '1px solid var(--border2)', borderRadius: 5, background: 'transparent', color: 'var(--t3)', cursor: 'pointer' }}>
+            Clear
+          </button>
+        )}
+        <span style={{ fontFamily: 'var(--onest)', fontSize: 11, color: 'var(--t3)' }}>{filtered.length} user{filtered.length !== 1 ? 's' : ''}</span>
+      </div>
+
+      <div style={{ padding: '0 24px 24px', maxWidth: 900, margin: '0 auto' }}>
         {loading ? (
           <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}>
             <div style={{ width: 24, height: 24, border: '2px solid var(--red)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin .7s linear infinite' }} />
@@ -143,7 +178,7 @@ export default function UsersPage() {
             </div>
             {users.length === 0 ? (
               <div style={{ padding: '48px 24px', textAlign: 'center', fontFamily: 'var(--onest)', fontSize: 13, color: 'var(--t3)' }}>No users found.</div>
-            ) : users.map(u => (
+            ) : pg.paginated.map(u => (
               <div key={u.id} style={{ display: 'grid', gridTemplateColumns: '44px 1fr 180px 120px 80px 80px', alignItems: 'center', padding: '0 16px', borderBottom: '1px solid var(--border)', transition: 'background .1s' }}
                 onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg2)')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
@@ -192,7 +227,7 @@ export default function UsersPage() {
               <div style={{ padding: '48px 24px', textAlign: 'center', fontFamily: 'var(--onest)', fontSize: 13, color: 'var(--t3)', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8 }}>No users found.</div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {users.map(u => (
+                {pg.paginated.map(u => (
                   <div key={u.id} style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, padding: '14px 16px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
                       <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#C8102E', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--onest)', fontSize: 13, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
@@ -225,6 +260,7 @@ export default function UsersPage() {
               </div>
             )}
           </div>
+          <Pagination page={pg.page} totalPages={pg.totalPages} onPageChange={pg.setPage} />
           </>
         )}
       </div>
