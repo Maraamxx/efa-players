@@ -260,9 +260,9 @@ export default function NewPlayerPage() {
 
   useEffect(() => {
     Promise.all([
-      fetch('/api/clubs').then(r => r.json()),
-      fetch('/api/leagues').then(r => r.json()),
-      fetch('/api/field-schemas?target=player').then(r => r.json()),
+      apiFetch('/api/clubs').then(r => r.json()),
+      apiFetch('/api/leagues').then(r => r.json()),
+      apiFetch('/api/field-schemas?target=player').then(r => r.json()),
     ]).then(([clubsData, leaguesData, schemasData]) => {
       setClubs(clubsData)
       setLeagues(leaguesData)

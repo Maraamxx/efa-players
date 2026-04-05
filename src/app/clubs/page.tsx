@@ -30,8 +30,8 @@ export default function ClubsPage() {
 
   const load = () => {
     Promise.all([
-      fetch('/api/clubs').then(r => r.json()),
-      fetch('/api/leagues').then(r => r.json()),
+      apiFetch('/api/clubs').then(r => r.json()),
+      apiFetch('/api/leagues').then(r => r.json()),
     ]).then(([c, l]) => { setClubs(c); setLeagues(l); setLoading(false) })
   }
   useEffect(() => { load() }, [])

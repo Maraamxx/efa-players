@@ -163,7 +163,7 @@ export default function FieldsPage() {
 
   const load = () => {
     setLoading(true)
-    fetch('/api/field-schemas')
+    apiFetch('/api/field-schemas')
       .then(r => r.json())
       .then(setSchemas)
       .finally(() => setLoading(false))

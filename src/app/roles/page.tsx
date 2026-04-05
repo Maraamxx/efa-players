@@ -163,7 +163,7 @@ export default function RolesPage() {
   const [filterType, setFilterType] = useState<'' | 'system' | 'custom'>('')
 
   const load = () => {
-    fetch('/api/roles').then(r => r.json()).then(d => { setRoles(d); setLoading(false) })
+    apiFetch('/api/roles').then(r => r.json()).then(d => { setRoles(d); setLoading(false) })
   }
   useEffect(() => { load() }, [])
   useEffect(() => { if (!authLoading && !can('roles', 'view')) router.replace('/players') }, [authLoading])

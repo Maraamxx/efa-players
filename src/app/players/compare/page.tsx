@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import type { Player, Club, League } from '@/types/domain'
 import { AppNav } from '@/components/AppNav'
 import { FLAG, POS_FULL } from '@/lib/constants'
+import { apiFetch } from '@/lib/apiFetch'
 
 function age(bd: string) {
   return Math.floor((Date.now() - new Date(bd).getTime()) / (1000 * 60 * 60 * 24 * 365.25))
@@ -104,9 +105,9 @@ export default function ComparePage() {
   // fetch supporting data once
   useEffect(() => {
     Promise.all([
-      fetch('/api/players?pageSize=9999').then(r => r.json()),
-      fetch('/api/clubs').then(r => r.json()),
-      fetch('/api/leagues').then(r => r.ok ? r.json() : []),
+      apiFetch('/api/players?pageSize=9999').then(r => r.json()),
+      apiFetch('/api/clubs').then(r => r.json()),
+      apiFetch('/api/leagues').then(r => r.ok ? r.json() : []),
     ]).then(([players, clubsData, leaguesData]) => {
       setAllPlayers(players.data ?? players)
       setClubs(clubsData)
@@ -121,8 +122,8 @@ export default function ComparePage() {
     Promise.all(
       ids.map(async id => {
         const [player, analysis] = await Promise.all([
-          fetch(`/api/players/${id}`).then(r => r.ok ? r.json() : null),
-          fetch(`/api/players/${id}/analysis`).then(r => r.ok ? r.json() : null),
+          apiFetch(`/api/players/${id}`).then(r => r.ok ? r.json() : null),
+          apiFetch(`/api/players/${id}/analysis`).then(r => r.ok ? r.json() : null),
         ])
         if (!player) return null
         const stats: PlayerStats = {

@@ -28,7 +28,7 @@ export default function LeaguesPage() {
   useModalLock(showForm || !!deleteLeague)
 
   const load = () => {
-    fetch('/api/leagues').then(r => r.json()).then(l => { setLeagues(l); setLoading(false) })
+    apiFetch('/api/leagues').then(r => r.json()).then(l => { setLeagues(l); setLoading(false) })
   }
   useEffect(() => { load() }, [])
 

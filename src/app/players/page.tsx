@@ -8,6 +8,7 @@ import { AppNav } from '@/components/AppNav'
 import { useCan } from '@/lib/auth'
 import { CustomSelect } from '@/components/CustomSelect'
 import { Pagination } from '@/components/Pagination'
+import { apiFetch } from '@/lib/apiFetch'
 import { FLAG, POS_GROUP } from '@/lib/constants'
 
 const POS_GROUP_CSS: Record<string, React.CSSProperties> = {
@@ -54,7 +55,7 @@ export default function PlayersPage() {
   const PAGE_SIZE = 20
 
   useEffect(() => {
-    fetch('/api/clubs').then(r => r.json()).then(setClubs)
+    apiFetch('/api/clubs').then(r => r.json()).then(setClubs)
   }, [])
 
   const load = useCallback(() => {
@@ -66,7 +67,7 @@ export default function PlayersPage() {
       ...(status    && { status }),
       ...(clubId    && { clubId }),
     })
-    fetch(`/api/players?${p}`)
+    apiFetch(`/api/players?${p}`)
       .then(r => r.json())
       .then((res: PaginatedResponse<Player>) => {
         setPlayers(res.data)

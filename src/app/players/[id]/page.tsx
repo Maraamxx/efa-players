@@ -669,10 +669,10 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
   const loadPlayer = useCallback(() => {
     if (!id) return
     Promise.all([
-      fetch(`/api/players/${id}`).then(r => r.ok ? r.json() : null),
-      fetch('/api/clubs').then(r => r.json()),
-      fetch('/api/leagues').then(r => r.json()),
-      fetch('/api/field-schemas?target=player').then(r => r.json()),
+      apiFetch(`/api/players/${id}`).then(r => r.ok ? r.json() : null),
+      apiFetch('/api/clubs').then(r => r.json()),
+      apiFetch('/api/leagues').then(r => r.json()),
+      apiFetch('/api/field-schemas?target=player').then(r => r.json()),
     ]).then(([apiPlayer, c, l, allPlayerSchemas]) => {
       // Use API data, fall back to sessionStorage cache
       let p = apiPlayer
@@ -731,7 +731,7 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
   useEffect(() => { loadPlayer() }, [loadPlayer])
 
   const loadMatchMedia = useCallback(async (matchId: string) => {
-    const assets = await fetch(`/api/media?entityType=match&entityId=${matchId}`).then(r => r.json())
+    const assets = await apiFetch(`/api/media?entityType=match&entityId=${matchId}`).then(r => r.json())
     setMatchMedia(prev => ({ ...prev, [matchId]: assets }))
   }, [])
 
@@ -740,8 +740,8 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
     if (!id || !player) return
     if (tab === 'matches') {
       Promise.all([
-        fetch(`/api/players/${id}/matches`).then(r => r.json()),
-        fetch('/api/field-schemas?target=match').then(r => r.json()),
+        apiFetch(`/api/players/${id}/matches`).then(r => r.json()),
+        apiFetch('/api/field-schemas?target=match').then(r => r.json()),
       ]).then(([r, s]) => {
         setMatches(r.data)
         setMatchSchemasFull(s)
@@ -750,9 +750,9 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
     }
     if (tab === 'analysis') {
       Promise.all([
-        fetch(`/api/players/${id}/analysis`).then(r => r.json()),
-        fetch('/api/field-schemas?target=analysis').then(r => r.json()),
-        fetch(`/api/media?entityType=analysis&entityId=${id}`).then(r => r.json()),
+        apiFetch(`/api/players/${id}/analysis`).then(r => r.json()),
+        apiFetch('/api/field-schemas?target=analysis').then(r => r.json()),
+        apiFetch(`/api/media?entityType=analysis&entityId=${id}`).then(r => r.json()),
       ]).then(([a, s, media]) => { setAnalysis(a); setAnalysisSchemasFull(s); setAnalysisMedia(media) })
     }
   }, [tab, id, player, loadMatchMedia])
@@ -817,7 +817,7 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
         notes:         matchEditDraft.notes || null,
       }),
     })
-    const r = await fetch(`/api/players/${id}/matches`).then(x => x.json())
+    const r = await apiFetch(`/api/players/${id}/matches`).then(x => x.json())
     setMatches(r.data)
     setMatchEditSaving(false)
     setEditingMatch(null)
@@ -865,7 +865,7 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
           .map(([k, v]) => ({ fieldSchemaId: k, value: v })),
       }),
     })
-    const r = await fetch(`/api/players/${id}/matches`).then(x => x.json())
+    const r = await apiFetch(`/api/players/${id}/matches`).then(x => x.json())
     setMatches(r.data)
     setMatchSaving(false)
     setShowMatchForm(false)
@@ -1900,7 +1900,7 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
             <button onClick={async () => {
               setSavingAnalysis(true)
               await apiFetch(`/api/players/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ analysisStats: {} }) })
-              const a = await fetch(`/api/players/${id}/analysis`).then(r => r.json())
+              const a = await apiFetch(`/api/players/${id}/analysis`).then(r => r.json())
               setAnalysis(a)
               setSavingAnalysis(false)
               setEditingAnalysis(false)
@@ -1917,7 +1917,7 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
             if (analysisDraft.totalAssists)     stats.totalAssists     = Number(analysisDraft.totalAssists)
             if (analysisDraft.totalMinutes)     stats.totalMinutes     = Number(analysisDraft.totalMinutes)
             await apiFetch(`/api/players/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ analysisStats: stats }) })
-            const a = await fetch(`/api/players/${id}/analysis`).then(r => r.json())
+            const a = await apiFetch(`/api/players/${id}/analysis`).then(r => r.json())
             setAnalysis(a)
             setSavingAnalysis(false)
             setEditingAnalysis(false)
@@ -2050,7 +2050,7 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
                     }),
                   })
                   // Reload analysis data so display updates
-                  const a = await fetch(`/api/players/${id}/analysis`).then(r => r.json())
+                  const a = await apiFetch(`/api/players/${id}/analysis`).then(r => r.json())
                   setAnalysis(a)
                 } finally {
                   setSavingCard(null)

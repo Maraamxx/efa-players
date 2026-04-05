@@ -1,14 +1,15 @@
 'use client'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { apiFetch } from '@/lib/apiFetch'
 
 export default function HomePage() {
   const [count, setCount] = useState({ players: 0, fields: 0 })
 
   useEffect(() => {
     Promise.all([
-      fetch('/api/players?page=1&pageSize=1').then(r => r.json()),
-      fetch('/api/field-schemas').then(r => r.json()),
+      apiFetch('/api/players?page=1&pageSize=1').then(r => r.json()),
+      apiFetch('/api/field-schemas').then(r => r.json()),
     ]).then(([p, f]) => {
       setCount({ players: p.total ?? 0, fields: f.length ?? 0 })
     }).catch(() => {})

@@ -1,3 +1,5 @@
+import { clientFetch } from './clientApi'
+
 export function getCurrentUser() {
   if (typeof window === 'undefined') return { id: 'user-1', name: 'System Admin' }
   const stored = localStorage.getItem('efa_current_user')
@@ -7,7 +9,7 @@ export function getCurrentUser() {
 
 export function apiFetch(url: string, options: RequestInit = {}): Promise<Response> {
   const user = getCurrentUser()
-  return fetch(url, {
+  const merged: RequestInit = {
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -15,5 +17,13 @@ export function apiFetch(url: string, options: RequestInit = {}): Promise<Respon
       'x-user-name': user.name,
       ...(options.headers ?? {}),
     },
-  })
+  }
+
+  // Client-side: use localStorage-backed store (works on Vercel serverless)
+  if (typeof window !== 'undefined' && url.startsWith('/api/')) {
+    return clientFetch(url, merged)
+  }
+
+  // Server-side fallback
+  return fetch(url, merged)
 }

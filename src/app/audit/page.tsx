@@ -7,6 +7,7 @@ import { AppNav } from '@/components/AppNav'
 import { useCan, useAuth } from '@/lib/auth'
 import { CustomSelect } from '@/components/CustomSelect'
 import { Pagination, usePagination } from '@/components/Pagination'
+import { apiFetch } from '@/lib/apiFetch'
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -351,7 +352,7 @@ export default function AuditPage() {
   useEffect(() => {
     if (!authLoading && !canViewAudit) { router.replace('/players'); return }
     if (!authLoading && canViewAudit) {
-      fetch('/api/audit?limit=500')
+      apiFetch('/api/audit?limit=500')
         .then(r => r.json())
         .then(data => { setEntries(data); setLoading(false) })
     }

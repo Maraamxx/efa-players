@@ -42,8 +42,8 @@ export default function UsersPage() {
 
   const load = () => {
     Promise.all([
-      fetch('/api/users').then(r => r.json()),
-      fetch('/api/roles').then(r => r.json()),
+      apiFetch('/api/users').then(r => r.json()),
+      apiFetch('/api/roles').then(r => r.json()),
     ]).then(([u, r]) => { setUsers(u); setRoles(r); setLoading(false) })
   }
   useEffect(() => { load() }, [])

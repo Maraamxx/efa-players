@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, ReactNode } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { AuthContext, AuthUser } from '@/lib/auth'
 import type { PermissionAction, PermissionResource } from '@/types/domain'
+import { apiFetch } from '@/lib/apiFetch'
 
 const PUBLIC_ROUTES = ['/login']
 const STORAGE_KEY   = 'efa_user_id'
@@ -20,7 +21,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false)
       return
     }
-    fetch(`/api/auth/me?userId=${stored}`)
+    apiFetch(`/api/auth/me?userId=${stored}`)
       .then(r => r.ok ? r.json() : null)
       .then(u => {
         if (u && !u.error) {
@@ -47,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user, loading, pathname, router])
 
   const login = useCallback(async (email: string, password: string) => {
-    const res = await fetch('/api/auth/login', {
+    const res = await apiFetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
