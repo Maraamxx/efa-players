@@ -21,7 +21,10 @@ import { readFileSync, writeFileSync, existsSync } from "fs";
 import { join } from "path";
 
 const STORE_VERSION = 11;
-const PERSIST_PATH = join(process.cwd(), ".next", "efa-store.json");
+const PERSIST_PATH = join(
+  process.env.NODE_ENV === "production" ? "/tmp" : join(process.cwd(), ".next"),
+  "efa-store.json"
+);
 
 interface StoreData {
   version: number;
