@@ -673,8 +673,15 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
       fetch('/api/clubs').then(r => r.json()),
       fetch('/api/leagues').then(r => r.json()),
       fetch('/api/field-schemas?target=player').then(r => r.json()),
-    ]).then(([p, c, l, allPlayerSchemas]) => {
+    ]).then(([apiPlayer, c, l, allPlayerSchemas]) => {
+      // Use API data, fall back to sessionStorage cache
+      let p = apiPlayer
+      if (!p || !p.name) {
+        try { const cached = sessionStorage.getItem(`player-${id}`); if (cached) p = JSON.parse(cached) } catch {}
+      }
       if (!p || !p.name) { setPlayer(null); setLoading(false); return }
+      // Cache for future loads
+      try { sessionStorage.setItem(`player-${id}`, JSON.stringify(p)) } catch {}
       setPlayer(p)
       setClubs(c)
       setLeagues(l)
@@ -780,7 +787,10 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
       body: JSON.stringify(data),
     })
     const updated = await res.json()
-    setPlayer(updated)
+    if (updated && updated.name) {
+      setPlayer(updated)
+      try { sessionStorage.setItem(`player-${id}`, JSON.stringify(updated)) } catch {}
+    }
     return updated
   }
 

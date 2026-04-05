@@ -397,6 +397,9 @@ const res = await apiFetch('/api/players', {
 })
 const created = await res.json()
 
+// Cache locally so the detail page can show it even if the server store resets
+try { sessionStorage.setItem(`player-${created.id}`, JSON.stringify(created)) } catch {}
+
 setSaving(false)
 router.push(`/players/${created.id}`)
   }
