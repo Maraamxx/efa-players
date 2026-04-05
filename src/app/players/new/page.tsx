@@ -378,6 +378,8 @@ const payload = {
   height: Number(form.height),
   currentClubId: form.currentClubId || null,
   currentLeagueId: form.currentLeagueId || null,
+  contractStart: form.contractStart || null,
+  contractEnd: form.contractEnd || null,
   nationalities: form.nationalities,
   fatherName: form.fatherName,
   fatherPhone: form.fatherPhone,

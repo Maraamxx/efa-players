@@ -669,11 +669,12 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
   const loadPlayer = useCallback(() => {
     if (!id) return
     Promise.all([
-      fetch(`/api/players/${id}`).then(r => r.json()),
+      fetch(`/api/players/${id}`).then(r => r.ok ? r.json() : null),
       fetch('/api/clubs').then(r => r.json()),
       fetch('/api/leagues').then(r => r.json()),
       fetch('/api/field-schemas?target=player').then(r => r.json()),
     ]).then(([p, c, l, allPlayerSchemas]) => {
+      if (!p || !p.name) { setPlayer(null); setLoading(false); return }
       setPlayer(p)
       setClubs(c)
       setLeagues(l)
