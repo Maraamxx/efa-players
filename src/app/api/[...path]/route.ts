@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { store } from '@/lib/store'
+import { store, persistStore } from '@/lib/store'
 import { writeAuditLog, sanitize } from '@/lib/audit'
 import { getUserFromRequest } from '@/lib/userContext'
 
@@ -149,6 +149,15 @@ export async function GET(
 // ── POST ──────────────────────────────────────────────────────────────────────
 
 export async function POST(
+  req: NextRequest,
+  ctx: { params: Promise<{ path: string[] }> },
+) {
+  const res = await _POST(req, ctx)
+  persistStore()
+  return res
+}
+
+async function _POST(
   req: NextRequest,
   { params }: { params: Promise<{ path: string[] }> },
 ) {
@@ -307,6 +316,15 @@ export async function POST(
 // ── PATCH ─────────────────────────────────────────────────────────────────────
 
 export async function PATCH(
+  req: NextRequest,
+  ctx: { params: Promise<{ path: string[] }> },
+) {
+  const res = await _PATCH(req, ctx)
+  persistStore()
+  return res
+}
+
+async function _PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ path: string[] }> },
 ) {
@@ -472,6 +490,15 @@ export async function PATCH(
 // ── DELETE ────────────────────────────────────────────────────────────────────
 
 export async function DELETE(
+  req: NextRequest,
+  ctx: { params: Promise<{ path: string[] }> },
+) {
+  const res = await _DELETE(req, ctx)
+  persistStore()
+  return res
+}
+
+async function _DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ path: string[] }> },
 ) {

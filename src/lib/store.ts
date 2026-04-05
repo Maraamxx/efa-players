@@ -17,34 +17,44 @@ import type {
   Role,
   SystemUser,
 } from "@/types/domain";
+import { readFileSync, writeFileSync, existsSync } from "fs";
+import { join } from "path";
 
-const STORE_VERSION = 10;
-// Stored on globalThis so it survives Next.js hot module reloads in dev
-// In production this lives for the lifetime of the server process
+const STORE_VERSION = 11;
+const PERSIST_PATH = join(process.cwd(), ".next", "efa-store.json");
 
-
-declare global {
-  var __efa_store:
-    | {
-        version: number;
-        players: Player[];
-        matches: PlayerMatch[];
-        schemas: FieldSchema[];
-        clubs: Club[];
-        leagues: League[];
-        auditLog: any[];
-        media: MediaAsset[];
-        roles: Role[];
-        users: SystemUser[];
-      }
-    | undefined;
+interface StoreData {
+  version: number;
+  players: Player[];
+  matches: PlayerMatch[];
+  schemas: FieldSchema[];
+  clubs: Club[];
+  leagues: League[];
+  auditLog: any[];
+  media: MediaAsset[];
+  roles: Role[];
+  users: SystemUser[];
 }
 
-if (
-  !globalThis.__efa_store ||
-  globalThis.__efa_store.version !== STORE_VERSION
-) {
-  globalThis.__efa_store = {
+function loadFromDisk(): StoreData | null {
+  try {
+    if (existsSync(PERSIST_PATH)) {
+      const raw = readFileSync(PERSIST_PATH, "utf-8");
+      const data = JSON.parse(raw);
+      if (data.version === STORE_VERSION) return data;
+    }
+  } catch {}
+  return null;
+}
+
+function saveToDisk(data: StoreData) {
+  try {
+    writeFileSync(PERSIST_PATH, JSON.stringify(data));
+  } catch {}
+}
+
+function seed(): StoreData {
+  return {
     version: STORE_VERSION,
     players: [...seedPlayers],
     matches: [...seedMatches],
@@ -56,10 +66,19 @@ if (
     roles: [...seedRoles],
     users: [...seedUsers],
   };
-  console.log(
-    '[store] seeded. schema sections:',
-    globalThis.__efa_store!.schemas.map(s => `${s.id}:${s.section}`)
-  );
+}
+
+// Try disk first, then globalThis, then seed fresh
+declare global {
+  var __efa_store: StoreData | undefined;
+}
+
+if (!globalThis.__efa_store || globalThis.__efa_store.version !== STORE_VERSION) {
+  globalThis.__efa_store = loadFromDisk() ?? seed();
 }
 
 export const store = globalThis.__efa_store;
+
+export function persistStore() {
+  saveToDisk(store);
+}
