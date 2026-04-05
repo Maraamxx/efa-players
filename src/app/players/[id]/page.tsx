@@ -856,6 +856,13 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
     toast.success('Match added')
   }
 
+  const { totalGoals, totalAssists, totalMins, recentForm } = useMemo(() => ({
+    totalGoals:   matches.reduce((s, m) => s + m.goalsScored, 0),
+    totalAssists: matches.reduce((s, m) => s + m.assists, 0),
+    totalMins:    matches.reduce((s, m) => s + m.minutesPlayed, 0),
+    recentForm:   [...matches].slice(0, 8).reverse(),
+  }), [matches])
+
   if (loading) return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
       <SkeletonStyles />
@@ -875,13 +882,6 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
       </div>
     </div>
   )
-
-  const { totalGoals, totalAssists, totalMins, recentForm } = useMemo(() => ({
-    totalGoals:   matches.reduce((s, m) => s + m.goalsScored, 0),
-    totalAssists: matches.reduce((s, m) => s + m.assists, 0),
-    totalMins:    matches.reduce((s, m) => s + m.minutesPlayed, 0),
-    recentForm:   [...matches].slice(0, 8).reverse(),
-  }), [matches])
 
   return (<>
     <div style={{ minHeight: '100vh', background: 'var(--bg2)', overflowX: 'hidden' }}>
