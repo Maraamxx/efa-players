@@ -45,7 +45,7 @@ export async function GET(
 
     let filtered = store.players.filter(p => {
       if (search   && !p.name.en.toLowerCase().includes(search) && !p.name.ar.includes(search)) return false
-      if (position && p.position    !== position) return false
+      if (position && !(p.positions ?? [(p as any).position]).includes(position as any)) return false
       if (status   && p.status      !== status)   return false
       if (clubId   && p.currentClubId !== clubId) return false
       return true

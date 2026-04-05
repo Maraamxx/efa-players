@@ -34,7 +34,11 @@ export interface Club {
 // Player
 // ─────────────────────────────────────────────
 
-export type Position = "GK" | "DEF" | "MID" | "FWD";
+export type Position =
+  | "GK"
+  | "CB" | "LB" | "RB" | "LWB" | "RWB"
+  | "CDM" | "CM" | "CAM" | "LM" | "RM"
+  | "LW" | "RW" | "CF" | "ST";
 export type Foot = "left" | "right" | "both";
 export type PlayerStatus = "active" | "inactive" | "suspended";
 
@@ -60,7 +64,7 @@ export interface Player {
   nationalities: PlayerNationality[];
   currentClubId: string | null;
   currentLeagueId: string | null;
-  position: Position;
+  positions: Position[];
   preferredFoot: Foot;
   height: number; // cm
   idNumber: string; // masked in display: "29•••••••••••"

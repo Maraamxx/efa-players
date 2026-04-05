@@ -29,7 +29,7 @@ interface FormData {
   photoPreview: string | null
 
   // step 2 — career & physical
-  position: Position | ''
+  positions: Position[]
 
   preferredFoot: 'left' | 'right' | 'both' | ''
   height: string
@@ -56,7 +56,7 @@ const EMPTY: FormData = {
   nameEn: '', nameAr: '', birthdate: '', status: 'active',
   idNumber: '',
   photoFile: null, photoPreview: null,
-  position: '', preferredFoot: '', height: '',
+  positions: [], preferredFoot: '', height: '',
   currentClubId: '', currentLeagueId: '', contractStart: '', contractEnd: '',
   nationalities: [{ countryCode: 'EG', isPrimary: true, passportNumber: '' }],
   fatherName: '', fatherPhone: '', fatherEmail: '',
@@ -291,7 +291,7 @@ if (s === 0) {
   if (form.idNumber && form.idNumber.length !== 14) e.idNumber = 'Must be 14 digits'
 }
     if (s === 1) {
-      if (!form.position)       e.position        = 'Required'
+      if (form.positions.length === 0) e.positions = 'Required'
       if (!form.preferredFoot)  e.preferredFoot   = 'Required'
       if (!form.height)         e.height          = 'Required'
       if (!form.currentClubId)  e.currentClubId   = 'Required'
@@ -372,7 +372,7 @@ const payload = {
   idNumber: form.idNumber,
   passportNumber: null, // passport is per-nationality now
   photoUrl: form.photoPreview,
-  position: form.position,
+  positions: form.positions,
 
   preferredFoot: form.preferredFoot,
   height: Number(form.height),
@@ -624,11 +624,33 @@ router.push(`/players/${created.id}`)
               <div style={sectionSub}>Position, club assignment, and contract details</div>
 
               <div className="wizard-form-grid2" style={{ marginBottom: 16 }}>
-                <div style={fieldWrap}>
-                  <FieldLabel required>POSITION</FieldLabel>
-                  <CustomSelect value={form.position} onChange={v => set('position', v as Position)} searchable={false}
-                    options={POSITIONS.map(p => ({ value: p.value, label: p.label }))} placeholder="Select position" />
-                  {err('position')}
+                <div style={{ ...fieldWrap, gridColumn: 'span 2' }}>
+                  <FieldLabel required>POSITION(S)</FieldLabel>
+                  <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 5 }}>
+                    {POSITIONS.map(p => {
+                      const on = form.positions.includes(p.value as Position)
+                      return (
+                        <button key={p.value}
+                          type="button"
+                          onClick={() => {
+                            const next = on
+                              ? form.positions.filter(v => v !== p.value)
+                              : [...form.positions, p.value as Position]
+                            set('positions', next)
+                          }}
+                          style={{
+                            fontFamily: 'var(--onest)', fontSize: 12, fontWeight: on ? 700 : 500,
+                            padding: '5px 12px', borderRadius: 4, cursor: 'pointer',
+                            border: `1px solid ${on ? 'var(--redBorder)' : 'var(--border2)'}`,
+                            background: on ? 'var(--redDim)' : 'transparent',
+                            color: on ? 'var(--red)' : 'var(--t2)',
+                            transition: 'all .15s',
+                          }}
+                        >{p.label}</button>
+                      )
+                    })}
+                  </div>
+                  {err('positions')}
                 </div>
                 <div style={fieldWrap}>
                   <FieldLabel required>PREFERRED FOOT</FieldLabel>

@@ -32,14 +32,33 @@ export const FLAG = (code: string) =>
   `https://flagcdn.com/20x15/${code.toLowerCase()}.png`
 
 export const POS_FULL: Record<string, string> = {
-  GK: 'Goalkeeper', DEF: 'Defender', MID: 'Midfielder', FWD: 'Forward',
+  GK: 'GK', CB: 'CB', LB: 'LB', RB: 'RB', LWB: 'LWB', RWB: 'RWB',
+  CDM: 'CDM', CM: 'CM', CAM: 'CAM', LM: 'LM', RM: 'RM',
+  LW: 'LW', RW: 'RW', CF: 'CF', ST: 'ST',
+}
+
+export const POS_GROUP: Record<string, string> = {
+  GK: 'GK', CB: 'DEF', LB: 'DEF', RB: 'DEF', LWB: 'DEF', RWB: 'DEF',
+  CDM: 'MID', CM: 'MID', CAM: 'MID', LM: 'MID', RM: 'MID',
+  LW: 'FWD', RW: 'FWD', CF: 'FWD', ST: 'FWD',
 }
 
 export const POSITIONS = [
-  { value: 'GK',  label: 'Goalkeeper' },
-  { value: 'DEF', label: 'Defender'   },
-  { value: 'MID', label: 'Midfielder' },
-  { value: 'FWD', label: 'Forward'    },
+  { value: 'GK',  label: 'GK',  group: 'Goalkeeper' },
+  { value: 'CB',  label: 'CB',  group: 'Defence' },
+  { value: 'LB',  label: 'LB',  group: 'Defence' },
+  { value: 'RB',  label: 'RB',  group: 'Defence' },
+  { value: 'LWB', label: 'LWB', group: 'Defence' },
+  { value: 'RWB', label: 'RWB', group: 'Defence' },
+  { value: 'CDM', label: 'CDM', group: 'Midfield' },
+  { value: 'CM',  label: 'CM',  group: 'Midfield' },
+  { value: 'CAM', label: 'CAM', group: 'Midfield' },
+  { value: 'LM',  label: 'LM',  group: 'Midfield' },
+  { value: 'RM',  label: 'RM',  group: 'Midfield' },
+  { value: 'LW',  label: 'LW',  group: 'Forward' },
+  { value: 'RW',  label: 'RW',  group: 'Forward' },
+  { value: 'CF',  label: 'CF',  group: 'Forward' },
+  { value: 'ST',  label: 'ST',  group: 'Forward' },
 ] as const
 
 export const FOOT: Record<string, string> = {

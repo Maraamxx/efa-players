@@ -8,9 +8,9 @@ import { AppNav } from '@/components/AppNav'
 import { useCan } from '@/lib/auth'
 import { CustomSelect } from '@/components/CustomSelect'
 import { Pagination } from '@/components/Pagination'
-import { FLAG } from '@/lib/constants'
+import { FLAG, POS_GROUP } from '@/lib/constants'
 
-const POS_CSS: Record<Position, React.CSSProperties> = {
+const POS_GROUP_CSS: Record<string, React.CSSProperties> = {
   GK:  { background: 'rgba(234,179,8,.10)',  color: '#854d0e', borderColor: 'rgba(234,179,8,.35)' },
   DEF: { background: 'rgba(59,130,246,.09)', color: '#1d4ed8', borderColor: 'rgba(59,130,246,.30)' },
   MID: { background: 'rgba(16,185,129,.09)', color: '#065f46', borderColor: 'rgba(16,185,129,.30)' },
@@ -187,7 +187,13 @@ export default function PlayersPage() {
 
           <div style={{ flex: '1 1 140px' }}>
             <CustomSelect value={position} onChange={setPosition} searchable={false}
-              options={[{ value: '', label: 'All Positions' }, { value: 'GK', label: 'Goalkeeper' }, { value: 'DEF', label: 'Defender' }, { value: 'MID', label: 'Midfielder' }, { value: 'FWD', label: 'Forward' }]}
+              options={[
+                { value: '', label: 'All Positions' },
+                { value: 'GK', label: 'GK' },
+                { value: 'CB', label: 'CB' }, { value: 'LB', label: 'LB' }, { value: 'RB', label: 'RB' }, { value: 'LWB', label: 'LWB' }, { value: 'RWB', label: 'RWB' },
+                { value: 'CDM', label: 'CDM' }, { value: 'CM', label: 'CM' }, { value: 'CAM', label: 'CAM' }, { value: 'LM', label: 'LM' }, { value: 'RM', label: 'RM' },
+                { value: 'LW', label: 'LW' }, { value: 'RW', label: 'RW' }, { value: 'CF', label: 'CF' }, { value: 'ST', label: 'ST' },
+              ]}
             />
           </div>
           <div style={{ flex: '1 1 140px' }}>
@@ -359,14 +365,18 @@ export default function PlayersPage() {
 
                   {/* Position */}
                   <td style={{ padding: '10px 16px' }}>
-                    <span style={{
-                      fontFamily: 'var(--onest)', fontSize: 11, letterSpacing: '.1em',
-                      padding: '3px 8px', borderRadius: 3,
-                      border: '1px solid',
-                      ...POS_CSS[p.position],
-                    }}>
-                      {p.position}
-                    </span>
+                    <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+                    {(p.positions ?? [(p as any).position]).filter(Boolean).map(pos => (
+                      <span key={pos} style={{
+                        fontFamily: 'var(--onest)', fontSize: 11, letterSpacing: '.1em',
+                        padding: '3px 8px', borderRadius: 3,
+                        border: '1px solid',
+                        ...(POS_GROUP_CSS[POS_GROUP[pos] ?? 'MID'] ?? {}),
+                      }}>
+                        {pos}
+                      </span>
+                    ))}
+                    </div>
                   </td>
 
                   {/* Club */}

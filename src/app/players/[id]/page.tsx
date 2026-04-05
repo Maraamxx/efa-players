@@ -16,7 +16,7 @@ import { useToast } from '@/components/Toast'
 import { useEscKey } from '@/lib/useEscKey'
 import { ProfileSkeleton, SkeletonStyles } from '@/components/Skeleton'
 import { CustomSelect } from '@/components/CustomSelect'
-import { FLAG, POS_FULL, FOOT, COUNTRIES } from '@/lib/constants'
+import { FLAG, POS_FULL, FOOT, COUNTRIES, POSITIONS } from '@/lib/constants'
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -690,7 +690,7 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
         idNumber:       p.idNumber ?? '',
       })
       setDraftFootball({
-        position:       p.position ?? '',
+        positions:      p.positions ?? (p.position ? [p.position] : []),
 
         preferredFoot:  p.preferredFoot ?? 'right',
         height:         String(p.height ?? ''),
@@ -976,7 +976,7 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
           {/* attr strip — own grid row */}
           <div className="attr-strip" style={{ gridColumn: '1 / -1' }}>
             {([
-              { l: 'Position', v: player.position,                                         red: true  },
+              { l: 'Position', v: (player.positions ?? [(player as any).position]).filter(Boolean).join(', ') || '—', red: true  },
               { l: 'Age group', v: player.birthdate ? String(ageGroup(player.birthdate)) : '—'        },
               { l: 'Height',    v: player.height ? `${player.height} cm` : '—'                        },
               { l: 'Foot',      v: FOOT[player.preferredFoot as keyof typeof FOOT] ?? '—'             },
@@ -1168,7 +1168,7 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
               setSavingCard('career')
               try {
                 await patch({
-                  position:        draftFootball.position,
+                  positions:       draftFootball.positions,
 
                   preferredFoot:   draftFootball.preferredFoot,
                   height:          Number(draftFootball.height),
@@ -1236,11 +1236,38 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
                     )
                   }
                 />
-                <InfoRow label="Position"      editing={editing}
-                  display={<span>{POS_FULL[player.position as keyof typeof POS_FULL] ?? '—'}</span>}
+                <InfoRow label="Position(s)"   editing={editing}
+                  display={
+                    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                      {(player.positions ?? [(player as any).position]).filter(Boolean).map(pos => (
+                        <span key={pos} style={{ fontFamily: 'var(--onest)', fontSize: 12, fontWeight: 600, padding: '2px 8px', borderRadius: 3, background: 'var(--redDim)', border: '1px solid var(--redBorder)', color: 'var(--red)' }}>{pos}</span>
+                      ))}
+                      {!(player.positions ?? [(player as any).position]).filter(Boolean).length && <span>—</span>}
+                    </div>
+                  }
                   edit={
-                    <CustomSelect value={draftFootball.position ?? ''} onChange={v => setDraftFootball((d: any) => ({ ...d, position: v }))} searchable={false}
-                      options={(['GK','DEF','MID','FWD'] as const).map(p => ({ value: p, label: POS_FULL[p] }))} />
+                    <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 5 }}>
+                      {POSITIONS.map(p => {
+                        const on = (draftFootball.positions ?? []).includes(p.value)
+                        return (
+                          <button key={p.value} type="button"
+                            onClick={() => {
+                              const cur = draftFootball.positions ?? []
+                              const next = on ? cur.filter((v: string) => v !== p.value) : [...cur, p.value]
+                              setDraftFootball((d: any) => ({ ...d, positions: next }))
+                            }}
+                            style={{
+                              fontFamily: 'var(--onest)', fontSize: 12, fontWeight: on ? 700 : 500,
+                              padding: '4px 10px', borderRadius: 4, cursor: 'pointer',
+                              border: `1px solid ${on ? 'var(--redBorder)' : 'var(--border2)'}`,
+                              background: on ? 'var(--redDim)' : 'transparent',
+                              color: on ? 'var(--red)' : 'var(--t2)',
+                              transition: 'all .15s',
+                            }}
+                          >{p.label}</button>
+                        )
+                      })}
+                    </div>
                   }
                 />
                 <InfoRow label="Preferred foot" editing={editing}

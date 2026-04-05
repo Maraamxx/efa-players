@@ -59,7 +59,7 @@ function STATS(
   const s = d.stats
   return [
     // Info section
-    { label: 'Position',     value: POS_FULL[d.player.position ?? ''] ?? d.player.position ?? '—', section: 'info' },
+    { label: 'Position',     value: (d.player.positions ?? [(d.player as any).position]).filter(Boolean).join(', ') || '—', section: 'info' },
     { label: 'Age',          value: d.player.birthdate ? `${age(d.player.birthdate)} yrs` : '—', section: 'info' },
     { label: 'Club',         value: clubName(d.player.currentClubId), section: 'info' },
     { label: 'League',       value: leagueName(d.player.currentLeagueId), section: 'info' },
@@ -257,7 +257,7 @@ export default function ComparePage() {
                             {p.name?.en}
                           </div>
                           <div style={{ fontFamily: 'var(--onest)', fontSize: 11, color: 'var(--t3)' }}>
-                            {POS_FULL[p.position ?? ''] ?? p.position}
+                            {(p.positions ?? [(p as any).position]).filter(Boolean).join(', ') || '—'}
                             {p.currentClubId ? ` · ${clubName(p.currentClubId)}` : ''}
                             {p.birthdate ? ` · ${age(p.birthdate)} yrs` : ''}
                           </div>
@@ -321,7 +321,7 @@ export default function ComparePage() {
                         {d.player.name?.en}
                       </Link>
                       <div style={{ fontFamily: 'var(--onest)', fontSize: 11, color: 'var(--t3)', marginTop: 3 }}>
-                        {d.player.position} · {d.player.birthdate ? `${age(d.player.birthdate)} yrs` : '—'}
+                        {(d.player.positions ?? [(d.player as any).position]).filter(Boolean).join(', ') || '—'} · {d.player.birthdate ? `${age(d.player.birthdate)} yrs` : '—'}
                       </div>
                       <div style={{ display: 'flex', gap: 3, marginTop: 4, flexWrap: 'wrap' }}>
                         {(d.player.nationalities ?? []).map(n => (

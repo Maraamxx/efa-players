@@ -26,7 +26,7 @@ export const playerHandlers = [
         !p.name.ar.includes(search)
       )
         return false;
-      if (position && p.position !== position) return false;
+      if (position && !((p as any).positions ?? [(p as any).position]).includes(position)) return false;
       if (status && p.status !== status) return false;
       if (clubId && p.currentClubId !== clubId) return false;
       return true;
