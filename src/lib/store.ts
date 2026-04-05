@@ -82,6 +82,14 @@ if (!globalThis.__efa_store || globalThis.__efa_store.version !== STORE_VERSION)
 
 export const store = globalThis.__efa_store;
 
+/** Re-read disk state into the live store (call at start of each request) */
+export function syncStore() {
+  const disk = loadFromDisk();
+  if (disk && disk !== store) {
+    Object.assign(store, disk);
+  }
+}
+
 export function persistStore() {
   saveToDisk(store);
 }

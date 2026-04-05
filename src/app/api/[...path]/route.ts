@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { store, persistStore } from '@/lib/store'
+import { store, persistStore, syncStore } from '@/lib/store'
 import { writeAuditLog, sanitize } from '@/lib/audit'
 import { getUserFromRequest } from '@/lib/userContext'
 
@@ -19,6 +19,7 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ path: string[] }> },
 ) {
+  syncStore()
   const { path } = await params
   const url   = req.nextUrl
   const route = '/' + path.join('/')
@@ -161,6 +162,7 @@ async function _POST(
   req: NextRequest,
   { params }: { params: Promise<{ path: string[] }> },
 ) {
+  syncStore()
   const { path } = await params
   const route = '/' + path.join('/')
   const body  = await req.json()
@@ -328,6 +330,7 @@ async function _PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ path: string[] }> },
 ) {
+  syncStore()
   const { path } = await params
   const body = await req.json()
   const user = getUserFromRequest(req)
@@ -502,6 +505,7 @@ async function _DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ path: string[] }> },
 ) {
+  syncStore()
   const { path } = await params
   const user = getUserFromRequest(req)
   const ip   = getIp(req)
