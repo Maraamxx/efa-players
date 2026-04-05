@@ -786,11 +786,18 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     })
-    const updated = await res.json()
+    let updated: any
+    if (res.ok) {
+      updated = await res.json()
+    }
     if (updated && updated.name) {
       setPlayer(updated)
-      try { sessionStorage.setItem(`player-${id}`, JSON.stringify(updated)) } catch {}
+    } else {
+      // Server lost the player (serverless cold start) — merge locally
+      updated = { ...player, ...data, updatedAt: new Date().toISOString() }
+      setPlayer(updated as any)
     }
+    try { sessionStorage.setItem(`player-${id}`, JSON.stringify(updated)) } catch {}
     return updated
   }
 
