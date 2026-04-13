@@ -7,6 +7,7 @@ import type { Player, Club, League, PlayerMatch, PlayerAnalysis, FieldSchema, Fi
 import { textStyle } from '@/lib/font'
 import { VideoPlayer, fmtTime, fmtSize } from '@/components/VideoPlayer'
 import { VideoUploadButton } from '@/components/VideoUploadButton'
+import { VideoDetailsModal } from '@/components/VideoDetailsModal'
 import { apiFetch } from '@/lib/apiFetch'
 import { AppNav } from '@/components/AppNav'
 import { DynamicFieldInput } from '@/components/DynamicFieldInput'
@@ -16,7 +17,7 @@ import { useToast } from '@/components/Toast'
 import { useEscKey } from '@/lib/useEscKey'
 import { ProfileSkeleton, SkeletonStyles } from '@/components/Skeleton'
 import { CustomSelect } from '@/components/CustomSelect'
-import { FLAG, POS_FULL, FOOT, COUNTRIES, POSITIONS } from '@/lib/constants'
+import { FLAG, POS_FULL, FOOT, COUNTRIES, POSITIONS, VIDEO_TAG_MAP } from '@/lib/constants'
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -637,6 +638,19 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
   const [deletingMatch,  setDeletingMatch]  = useState<PlayerMatch | null>(null)
   const [matchEditDraft, setMatchEditDraft] = useState<any>({})
   const [matchEditSaving, setMatchEditSaving] = useState(false)
+
+  // accordion + video-details modal state
+  const [expandedMatchIds, setExpandedMatchIds] = useState<Set<string>>(new Set())
+  const toggleMatchExpanded = (id: string) => setExpandedMatchIds(prev => {
+    const next = new Set(prev)
+    if (next.has(id)) next.delete(id); else next.add(id)
+    return next
+  })
+  // when a just-uploaded asset should open the details modal in 'create' mode
+  const [draftVideoAsset,   setDraftVideoAsset]   = useState<{ asset: MediaAsset; matchId: string | null } | null>(null)
+  // when an existing asset is being edited
+  const [editingVideoAsset, setEditingVideoAsset] = useState<{ asset: MediaAsset; matchId: string | null } | null>(null)
+  const [deletingVideoAsset, setDeletingVideoAsset] = useState<{ asset: MediaAsset; matchId: string | null } | null>(null)
 
   // delete player
   const [showDeletePlayer, setShowDeletePlayer] = useState(false)
@@ -1726,9 +1740,16 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
             <div style={{ padding: '10px 16px', borderBottom: '1px solid var(--border)', background: 'var(--bg3)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <span style={{ fontFamily: 'var(--onest)', fontSize: 12, fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase' as const, color: 'var(--t2)' }}>Match History</span>
               {(canCreateMatches || canEditMatches) && (
-                <span onClick={() => setShowMatchForm(true)} style={{ fontFamily: 'var(--onest)', fontSize: 11, fontWeight: 600, color: 'var(--red)', cursor: 'pointer' }}>
-                  + Add Match
-                </span>
+                <button
+                  onClick={() => setShowMatchForm(true)}
+                  className="btn-add-match"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
+                  Add match
+                </button>
               )}
             </div>
             {matches.length === 0 ? (
@@ -1741,6 +1762,7 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--border)', background: 'var(--bg3)' }}>
                     {[
+                    { h: '',            cls: '', w: 28 },
                     { h: 'Date',        cls: '' },
                     { h: 'Match',       cls: '' },
                     { h: 'Competition', cls: 'match-table-comp' },
@@ -1749,27 +1771,53 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
                     { h: 'Assists',     cls: 'match-table-assists' },
                     { h: 'Added',       cls: '' },
                     { h: '',            cls: '' },
-                  ].map(({ h, cls }) => (
-                      <th key={h} className={cls} style={{ padding: '9px 16px', textAlign: 'left', fontFamily: 'var(--onest)', fontSize: 10, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase' as const, color: 'var(--t3)' }}>{h}</th>
+                  ].map(({ h, cls, w }, i) => (
+                      <th key={`h${i}`} className={cls} style={{ padding: '9px 16px', textAlign: 'left', fontFamily: 'var(--onest)', fontSize: 10, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase' as const, color: 'var(--t3)', width: w }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {matches.map(m => (
+                  {matches.map(m => {
+                    const matchVideos = matchMedia[m.id] ?? []
+                    const videoCount = matchVideos.length
+                    const expanded = expandedMatchIds.has(m.id)
+                    // Featured videos pinned first, then by upload date (newest first).
+                    const sortedVideos = [...matchVideos].sort((a, b) => {
+                      if (!!a.isFeatured !== !!b.isFeatured) return a.isFeatured ? -1 : 1
+                      return (b.uploadedAt ?? '').localeCompare(a.uploadedAt ?? '')
+                    })
+                    return (
                     <React.Fragment key={m.id}>
                       <tr
-                        style={{ borderBottom: 'none', transition: 'background .1s' }}
-                        onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg3)')}
-                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                        className={`match-row${expanded ? ' match-row-expanded' : ''}`}
+                        onClick={() => toggleMatchExpanded(m.id)}
                       >
-                        <td style={{ padding: '9px 16px', fontFamily: 'var(--onest)', color: 'var(--t2)', fontSize: 12 }}>{fmtDate(m.matchDate)}</td>
-                        <td style={{ padding: '9px 16px', fontWeight: 600 }}>{m.matchName}</td>
-                        <td className="match-table-comp" style={{ padding: '9px 16px', color: 'var(--t2)' }}>{m.competition ?? '—'}</td>
-                        <td style={{ padding: '9px 16px', fontFamily: 'var(--onest)', color: 'var(--t2)' }}>{m.minutesPlayed}'</td>
-                        <td style={{ padding: '9px 16px', fontWeight: 700, color: m.goalsScored > 0 ? 'var(--red)' : 'var(--t3)' }}>{m.goalsScored > 0 ? m.goalsScored : '—'}</td>
-                        <td className="match-table-assists" style={{ padding: '9px 16px', fontWeight: 700, color: m.assists > 0 ? 'var(--t2)' : 'var(--t3)' }}>{m.assists > 0 ? m.assists : '—'}</td>
-                        <td style={{ padding: '9px 16px', fontFamily: 'var(--onest)', color: 'var(--t2)', fontSize: 12 }}>{m.createdAt ? fmtDate(m.createdAt) : '—'}</td>
-                        <td style={{ padding: '9px 16px', textAlign: 'right' as const }}>
+                        <td style={{ padding: '10px 10px 10px 16px', width: 28 }}>
+                          <span className={`match-row-chevron${expanded ? ' open' : ''}`} aria-hidden="true">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="9 6 15 12 9 18" />
+                            </svg>
+                          </span>
+                        </td>
+                        <td style={{ padding: '10px 16px 10px 0', fontFamily: 'var(--onest)', color: 'var(--t2)', fontSize: 12 }}>{fmtDate(m.matchDate)}</td>
+                        <td style={{ padding: '10px 16px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 9, flexWrap: 'wrap' }}>
+                            <span style={{ fontWeight: 600, color: 'var(--t1)' }}>{m.matchName}</span>
+                            <span className={`videos-badge${videoCount === 0 ? ' videos-badge-empty' : ''}`}>
+                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <polygon points="23 7 16 12 23 17 23 7" />
+                                <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+                              </svg>
+                              {videoCount} {videoCount === 1 ? 'video' : 'videos'}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="match-table-comp" style={{ padding: '10px 16px', color: 'var(--t2)' }}>{m.competition ?? '—'}</td>
+                        <td style={{ padding: '10px 16px', fontFamily: 'var(--onest)', color: 'var(--t2)' }}>{m.minutesPlayed}'</td>
+                        <td style={{ padding: '10px 16px', fontWeight: 700, color: m.goalsScored > 0 ? 'var(--red)' : 'var(--t3)' }}>{m.goalsScored > 0 ? m.goalsScored : '—'}</td>
+                        <td className="match-table-assists" style={{ padding: '10px 16px', fontWeight: 700, color: m.assists > 0 ? 'var(--t2)' : 'var(--t3)' }}>{m.assists > 0 ? m.assists : '—'}</td>
+                        <td style={{ padding: '10px 16px', fontFamily: 'var(--onest)', color: 'var(--t2)', fontSize: 12 }}>{m.createdAt ? fmtDate(m.createdAt) : '—'}</td>
+                        <td style={{ padding: '10px 16px', textAlign: 'right' as const }}>
                           <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
                             {canEditMatches && (
                               <button
@@ -1786,90 +1834,133 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
                                     notes:         m.notes ?? '',
                                   })
                                 }}
-                                style={{ fontFamily: 'var(--onest)', fontSize: 11, fontWeight: 600, padding: '3px 10px', border: '1px solid var(--border2)', borderRadius: 3, background: 'transparent', color: 'var(--t2)', cursor: 'pointer' }}
+                                style={{ fontFamily: 'var(--onest)', fontSize: 11, fontWeight: 600, padding: '4px 12px', border: '1px solid var(--border2)', borderRadius: 4, background: 'var(--bg)', color: 'var(--t2)', cursor: 'pointer' }}
                               >Edit</button>
                             )}
                             {canDeleteMatches && (
                               <button
                                 onClick={e => { e.stopPropagation(); setDeletingMatch(m) }}
-                                style={{ fontFamily: 'var(--onest)', fontSize: 11, fontWeight: 600, padding: '3px 10px', border: '1px solid var(--border2)', borderRadius: 3, background: 'transparent', color: 'var(--t3)', cursor: 'pointer' }}
+                                style={{ fontFamily: 'var(--onest)', fontSize: 11, fontWeight: 600, padding: '4px 12px', border: '1px solid var(--border2)', borderRadius: 4, background: 'var(--bg)', color: 'var(--t3)', cursor: 'pointer' }}
                                 onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(200,16,46,.4)'; e.currentTarget.style.color = '#C8102E'; e.currentTarget.style.background = 'rgba(200,16,46,.06)' }}
-                                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border2)'; e.currentTarget.style.color = 'var(--t3)'; e.currentTarget.style.background = 'transparent' }}
+                                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border2)'; e.currentTarget.style.color = 'var(--t3)'; e.currentTarget.style.background = 'var(--bg)' }}
                               >Delete</button>
                             )}
                           </div>
                         </td>
                       </tr>
-                      {((matchMedia[m.id]?.length ?? 0) > 0 || canUploadMedia) && (
-                      <tr key={`${m.id}-media`} style={{ borderBottom: '1px solid var(--border)' }}>
-                        <td colSpan={8} style={{ padding: '0 16px 14px' }}>
-                          <div className="match-videos">
-                            <div className="match-videos-header">
-                              <span className="match-videos-label">
-                                Videos
-                                <span className="match-videos-count">{matchMedia[m.id]?.length ?? 0}</span>
-                              </span>
-                              {canUploadMedia && (matchMedia[m.id]?.length ?? 0) > 0 && (
+                      {expanded && (
+                      <tr key={`${m.id}-media`} className="match-videos-row">
+                        <td colSpan={9} style={{ padding: '0 16px 14px', background: 'var(--bg2)' }}>
+                          <div className="match-videos-panel">
+                            <div className="match-videos-panel-header">
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <span className="match-videos-panel-label">Videos</span>
+                                <span className="match-videos-panel-count">{videoCount}</span>
+                              </div>
+                              {canUploadMedia && videoCount > 0 && (
                                 <VideoUploadButton
                                   entityType="match"
                                   entityId={m.id}
-                                  onUploaded={asset => setMatchMedia(prev => ({ ...prev, [m.id]: [...(prev[m.id] ?? []), asset] }))}
+                                  onUploaded={asset => {
+                                    setMatchMedia(prev => ({ ...prev, [m.id]: [...(prev[m.id] ?? []), asset] }))
+                                    setDraftVideoAsset({ asset, matchId: m.id })
+                                  }}
                                 />
                               )}
                             </div>
-                            {(matchMedia[m.id]?.length ?? 0) === 0 ? (
-                              <div className="match-videos-empty">
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '6px 0' }}>
-                                  <span>No videos yet for this match.</span>
-                                  {canUploadMedia && (
-                                    <VideoUploadButton
-                                      entityType="match"
-                                      entityId={m.id}
-                                      onUploaded={asset => setMatchMedia(prev => ({ ...prev, [m.id]: [...(prev[m.id] ?? []), asset] }))}
-                                    />
-                                  )}
+                            {videoCount === 0 ? (
+                              <div className="match-videos-panel-empty">
+                                <div style={{ fontSize: 24, opacity: .35, marginBottom: 6 }}>🎬</div>
+                                <div style={{ fontFamily: 'var(--onest)', fontSize: 13, fontWeight: 700, color: 'var(--t2)', marginBottom: 4 }}>No videos yet</div>
+                                <div style={{ fontFamily: 'var(--onest)', fontSize: 11, color: 'var(--t3)', marginBottom: 12, textAlign: 'center', maxWidth: 320, lineHeight: 1.5 }}>
+                                  Upload a clip and tag it for scouts — goal, highlight, full match, defensive play, etc.
                                 </div>
+                                {canUploadMedia && (
+                                  <VideoUploadButton
+                                    entityType="match"
+                                    entityId={m.id}
+                                    onUploaded={asset => {
+                                      setMatchMedia(prev => ({ ...prev, [m.id]: [...(prev[m.id] ?? []), asset] }))
+                                      setDraftVideoAsset({ asset, matchId: m.id })
+                                    }}
+                                  />
+                                )}
                               </div>
                             ) : (
-                              <div className="match-videos-strip">
-                                {(matchMedia[m.id] ?? []).map(asset => {
-                                  const title = asset.originalFilename?.replace(/\.[^/.]+$/, '') ?? 'Untitled video'
+                              <ul className="video-list">
+                                {sortedVideos.map(asset => {
+                                  const displayTitle = asset.title ?? asset.originalFilename?.replace(/\.[^/.]+$/, '') ?? 'Untitled video'
+                                  const tagDef = asset.tag ? VIDEO_TAG_MAP[asset.tag] : null
                                   return (
-                                    <div
+                                    <li
                                       key={asset.id}
-                                      className="video-card"
+                                      className={`video-list-row${asset.isFeatured ? ' video-list-row-featured' : ''}`}
                                       onClick={() => setOpenPlayer(asset)}
-                                      title={asset.originalFilename}
                                     >
-                                      <div className="video-card-thumb">
-                                        <div className="video-card-play">
-                                          <div style={{ width: 0, height: 0, borderStyle: 'solid', borderWidth: '6px 0 6px 11px', borderColor: 'transparent transparent transparent #fff', marginLeft: 3 }} />
+                                      <div className="video-list-thumb">
+                                        <div className="video-list-thumb-play">
+                                          <div style={{ width: 0, height: 0, borderStyle: 'solid', borderWidth: '4px 0 4px 7px', borderColor: 'transparent transparent transparent #fff', marginLeft: 2 }} />
                                         </div>
-                                        {asset.notes.length > 0 && (
-                                          <span className="video-card-notes-badge">{asset.notes.length} note{asset.notes.length === 1 ? '' : 's'}</span>
-                                        )}
                                         {asset.durationSeconds != null && (
-                                          <span className="video-card-duration">{fmtTime(asset.durationSeconds)}</span>
+                                          <span className="video-list-duration">{fmtTime(asset.durationSeconds)}</span>
                                         )}
                                       </div>
-                                      <div className="video-card-body">
-                                        <div className="video-card-title">{title}</div>
-                                        <div className="video-card-meta">
+                                      <div className="video-list-info">
+                                        <div className="video-list-title-row">
+                                          {asset.isFeatured && (
+                                            <span className="video-list-pin" title="Pinned">
+                                              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                              </svg>
+                                            </span>
+                                          )}
+                                          <span className="video-list-title" title={asset.originalFilename ?? ''}>{displayTitle}</span>
+                                          {tagDef && (
+                                            <span
+                                              className="video-list-tag"
+                                              style={{ color: tagDef.color, background: tagDef.bg, borderColor: tagDef.border }}
+                                            >
+                                              {tagDef.label}
+                                            </span>
+                                          )}
+                                        </div>
+                                        <div className="video-list-meta">
                                           <span>{fmtSize(asset.sizeBytes)}</span>
                                           {asset.uploadedAt && <span>{fmtDate(asset.uploadedAt)}</span>}
+                                          {asset.notes.length > 0 && (
+                                            <span className="video-list-notes">
+                                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                                              </svg>
+                                              {asset.notes.length}
+                                            </span>
+                                          )}
                                         </div>
+                                        {asset.description && (
+                                          <div className="video-list-description">{asset.description}</div>
+                                        )}
                                       </div>
-                                    </div>
+                                      <div className="video-list-actions">
+                                        <button
+                                          onClick={e => { e.stopPropagation(); setEditingVideoAsset({ asset, matchId: m.id }) }}
+                                          className="video-list-btn"
+                                        >Rename</button>
+                                        <button
+                                          onClick={e => { e.stopPropagation(); setDeletingVideoAsset({ asset, matchId: m.id }) }}
+                                          className="video-list-btn video-list-btn-danger"
+                                        >Delete</button>
+                                      </div>
+                                    </li>
                                   )
                                 })}
-                              </div>
+                              </ul>
                             )}
                           </div>
                         </td>
                       </tr>
                       )}
                     </React.Fragment>
-                  ))}
+                  )})}
                 </tbody>
               </table>
               </div>
@@ -2038,7 +2129,10 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
                     <VideoUploadButton
                       entityType="analysis"
                       entityId={id!}
-                      onUploaded={asset => setAnalysisMedia(prev => [...prev, asset])}
+                      onUploaded={asset => {
+                        setAnalysisMedia(prev => [...prev, asset])
+                        setDraftVideoAsset({ asset, matchId: null })
+                      }}
                     />
                     <span style={{ fontFamily: 'var(--onest)', fontSize: 10, color: 'var(--t4)' }}>MP4, MOV — up to 8 GB</span>
                   </div>
@@ -2454,6 +2548,71 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
                 setAnalysisMedia(prev => prev.map(a => a.id === openPlayer.id ? updated : a))
               }}
             />
+          </div>
+        </div>
+      )}
+
+      {/* ── VIDEO DETAILS MODAL (create / edit) ── */}
+      {(draftVideoAsset || editingVideoAsset) && (() => {
+        const ctx = draftVideoAsset ?? editingVideoAsset!
+        const mode: 'create' | 'edit' = draftVideoAsset ? 'create' : 'edit'
+        return (
+          <VideoDetailsModal
+            asset={ctx.asset}
+            mode={mode}
+            onClose={() => { setDraftVideoAsset(null); setEditingVideoAsset(null) }}
+            onSaved={updated => {
+              if (ctx.matchId) {
+                setMatchMedia(prev => ({
+                  ...prev,
+                  [ctx.matchId!]: (prev[ctx.matchId!] ?? []).map(a => a.id === updated.id ? updated : a),
+                }))
+                // Ensure the accordion stays open on the match we just edited.
+                setExpandedMatchIds(prev => {
+                  const next = new Set(prev); next.add(ctx.matchId!); return next
+                })
+              } else {
+                setAnalysisMedia(prev => prev.map(a => a.id === updated.id ? updated : a))
+              }
+              if (openPlayer?.id === updated.id) setOpenPlayer(updated)
+              setDraftVideoAsset(null)
+              setEditingVideoAsset(null)
+              toast.success(mode === 'create' ? 'Video added' : 'Video updated')
+            }}
+          />
+        )
+      })()}
+
+      {/* ── DELETE VIDEO CONFIRM ── */}
+      {deletingVideoAsset && (
+        <div className="modal-overlay" style={{ position: 'fixed', inset: 0, zIndex: 70, background: 'rgba(0,0,0,.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+          onClick={e => { if (e.target === e.currentTarget) setDeletingVideoAsset(null) }}>
+          <div className="modal-sheet" style={{ width: '100%', maxWidth: 420, background: 'var(--bg)', borderRadius: 12, padding: 22, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ fontFamily: 'var(--onest)', fontSize: 17, fontWeight: 800, color: 'var(--t1)' }}>Delete video?</div>
+            <div style={{ fontFamily: 'var(--onest)', fontSize: 13, color: 'var(--t2)', lineHeight: 1.55 }}>
+              <strong>{deletingVideoAsset.asset.title ?? deletingVideoAsset.asset.originalFilename}</strong> and all of its notes will be permanently removed. This can't be undone.
+            </div>
+            <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
+              <button
+                onClick={() => setDeletingVideoAsset(null)}
+                style={{ flex: 1, height: 42, fontFamily: 'var(--onest)', fontSize: 13, fontWeight: 600, border: '1px solid var(--border2)', borderRadius: 7, background: 'transparent', color: 'var(--t2)', cursor: 'pointer' }}
+              >Cancel</button>
+              <button
+                onClick={async () => {
+                  const { asset, matchId } = deletingVideoAsset
+                  await apiFetch(`/api/media/${asset.id}`, { method: 'DELETE' })
+                  if (matchId) {
+                    setMatchMedia(prev => ({ ...prev, [matchId]: (prev[matchId] ?? []).filter(a => a.id !== asset.id) }))
+                  } else {
+                    setAnalysisMedia(prev => prev.filter(a => a.id !== asset.id))
+                  }
+                  if (openPlayer?.id === asset.id) setOpenPlayer(null)
+                  setDeletingVideoAsset(null)
+                  toast.success('Video deleted')
+                }}
+                style={{ flex: 2, height: 42, fontFamily: 'var(--onest)', fontSize: 13, fontWeight: 700, border: 'none', borderRadius: 7, background: 'var(--red)', color: '#fff', cursor: 'pointer' }}
+              >Delete video</button>
+            </div>
           </div>
         </div>
       )}

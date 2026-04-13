@@ -208,7 +208,13 @@ export async function clientFetch(url: string, options: RequestInit = {}): Promi
     }
 
     if (route === '/media') {
-      const asset = { ...body, id: `media-${Date.now()}`, uploadedAt: new Date().toISOString(), notes: [] }
+      const asset = {
+        title: null, tag: null, description: null, isFeatured: false,
+        ...body,
+        id: `media-${Date.now()}`,
+        uploadedAt: new Date().toISOString(),
+        notes: [],
+      }
       store.media = [...store.media, asset]
       audit(store, 'CREATE', 'media', asset.id, asset.originalFilename ?? 'Media', user, null, { id: asset.id, filename: asset.originalFilename })
       saveStore(); return res(asset, 201)
@@ -295,6 +301,20 @@ export async function clientFetch(url: string, options: RequestInit = {}): Promi
         m.id === path[1] ? { ...m, notes: m.notes.map(n => n.id === path[3] ? updated : n) } : m
       )
       saveStore(); return res(updated)
+    }
+
+    if (path[0] === 'media' && path.length === 2) {
+      const existing = store.media.find(m => m.id === path[1])
+      if (!existing) return notFound()
+      const patch: Record<string, unknown> = {}
+      if ('title'       in body) patch.title       = body.title
+      if ('tag'         in body) patch.tag         = body.tag
+      if ('description' in body) patch.description = body.description
+      if ('isFeatured'  in body) patch.isFeatured  = !!body.isFeatured
+      store.media = store.media.map(m => m.id === path[1] ? { ...m, ...patch } : m)
+      const after = store.media.find(m => m.id === path[1])!
+      audit(store, 'UPDATE', 'media', path[1], after.title ?? after.originalFilename, user, null, patch)
+      saveStore(); return res(after)
     }
 
     if (path[0] === 'clubs' && path.length === 2) {

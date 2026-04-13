@@ -249,6 +249,10 @@ async function _POST(
 
   if (route === '/media') {
     const asset = {
+      title:       null,
+      tag:         null,
+      description: null,
+      isFeatured:  false,
       ...body,
       id:         `media-${Date.now()}`,
       uploadedAt: new Date().toISOString(),
@@ -449,6 +453,31 @@ async function _PATCH(
       })
     }
     return after ? json(after) : notFound()
+  }
+
+  // PATCH /api/media/:id — update title / tag / description / isFeatured
+  if (path[0] === 'media' && path.length === 2) {
+    const before = store.media.find(m => m.id === path[1])
+    if (!before) return notFound()
+    const patch: Record<string, unknown> = {}
+    if ('title'       in body) patch.title       = body.title
+    if ('tag'         in body) patch.tag         = body.tag
+    if ('description' in body) patch.description = body.description
+    if ('isFeatured'  in body) patch.isFeatured  = !!body.isFeatured
+    store.media = store.media.map(m =>
+      m.id === path[1] ? { ...m, ...patch } : m
+    )
+    const after = store.media.find(m => m.id === path[1])!
+    writeAuditLog({
+      action: 'UPDATE', entityType: 'media',
+      entityId: path[1],
+      entityLabel: `${after.title ?? after.originalFilename} — ${mediaContext(after)}`,
+      user,
+      before: { title: before.title, tag: before.tag, description: before.description, isFeatured: before.isFeatured },
+      after:  { title: after.title,  tag: after.tag,  description: after.description,  isFeatured: after.isFeatured  },
+      ip,
+    })
+    return json(after)
   }
 
   // PATCH /api/media/:id/notes/:noteId — author-only edit of a video note

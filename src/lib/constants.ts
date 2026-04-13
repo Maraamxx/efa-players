@@ -70,3 +70,20 @@ export const STATUSES = [
   { value: 'inactive',  label: 'Inactive'  },
   { value: 'suspended', label: 'Suspended' },
 ] as const
+
+// Recommended tag palette for match videos — scout-friendly labels.
+// Admins can still enter any free-text tag; this just drives the suggestion
+// dropdown and consistent chip colours.
+export const VIDEO_TAGS: { value: string; label: string; color: string; bg: string; border: string }[] = [
+  { value: 'highlight',  label: 'Highlight',    color: '#7c3aed', bg: 'rgba(124,58,237,.10)', border: 'rgba(124,58,237,.30)' },
+  { value: 'full-match', label: 'Full match',   color: '#15803d', bg: 'rgba(22,163,74,.10)',  border: 'rgba(22,163,74,.30)'  },
+  { value: 'goal',       label: 'Goal',         color: '#C8102E', bg: 'rgba(200,16,46,.08)',  border: 'rgba(200,16,46,.28)'  },
+  { value: 'assist',     label: 'Assist',       color: '#1d4ed8', bg: 'rgba(59,130,246,.09)', border: 'rgba(59,130,246,.28)' },
+  { value: 'defensive',  label: 'Defensive',    color: '#0369a1', bg: 'rgba(3,105,161,.08)',  border: 'rgba(3,105,161,.28)'  },
+  { value: 'skill',      label: 'Skill',        color: '#b45309', bg: 'rgba(180,83,9,.09)',   border: 'rgba(180,83,9,.28)'   },
+  { value: 'training',   label: 'Training',     color: '#525252', bg: 'rgba(82,82,82,.08)',   border: 'rgba(82,82,82,.25)'   },
+  { value: 'other',      label: 'Other',        color: '#525252', bg: 'rgba(82,82,82,.06)',   border: 'rgba(82,82,82,.20)'   },
+]
+
+export const VIDEO_TAG_MAP = Object.fromEntries(VIDEO_TAGS.map(t => [t.value, t])) as Record<string, typeof VIDEO_TAGS[number]>
+

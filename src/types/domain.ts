@@ -172,11 +172,33 @@ export interface VideoNote {
   createdAt: string;
 }
 
+export type VideoTag =
+  | "highlight"
+  | "full-match"
+  | "goal"
+  | "assist"
+  | "defensive"
+  | "skill"
+  | "training"
+  | "other";
+
 export interface MediaAsset {
   id: string;
   entityType: "match" | "analysis";
   entityId: string;
   originalFilename: string;
+  // Human-readable display title — falls back to originalFilename when null.
+  title: string | null;
+  // Type of clip (e.g. Goal, Highlight, Full match). Free string so admins
+  // can introduce new tags without a schema change; a recommended set lives
+  // in VIDEO_TAGS in lib/constants.
+  tag: string | null;
+  // Scout-facing context — the "why this clip matters" blurb a filename
+  // can't convey.
+  description: string | null;
+  // Pinned videos float to the top of the match's video list. Multiple
+  // pins per match are allowed.
+  isFeatured: boolean;
   sizeBytes: number;
   durationSeconds: number | null;
   blobUrl: string | null; // blob: URL — lives for the browser session
