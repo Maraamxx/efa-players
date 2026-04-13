@@ -206,7 +206,7 @@ export default function ClubsPage() {
                   />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontFamily: 'var(--onest)', fontSize: 14, fontWeight: 700, color: 'var(--t1)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{club.name.en}</div>
-                    <div style={{ fontFamily: 'var(--amiri)', fontSize: 13, color: 'var(--t3)', direction: 'rtl', textAlign: 'left', marginTop: 1 }}>{club.name.ar}</div>
+                    <div style={{ fontFamily: 'var(--arabic)', fontSize: 13, color: 'var(--t3)', direction: 'rtl', textAlign: 'left', marginTop: 1 }}>{club.name.ar}</div>
                     <div style={{ fontFamily: 'var(--onest)', fontSize: 11, color: 'var(--t3)', marginTop: 2 }}>{leagueName(club.leagueId)}</div>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 5, flexShrink: 0 }}>
@@ -241,7 +241,7 @@ export default function ClubsPage() {
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                     >
                       <td style={{ padding: '12px 16px', fontFamily: 'var(--onest)', fontWeight: 700, color: 'var(--t1)' }}>{club.name.en}</td>
-                      <td style={{ padding: '12px 16px', fontFamily: 'var(--amiri)', fontSize: 15, color: 'var(--t2)', direction: 'rtl', textAlign: 'left' }}>{club.name.ar}</td>
+                      <td style={{ padding: '12px 16px', fontFamily: 'var(--arabic)', fontSize: 15, color: 'var(--t2)', direction: 'rtl', textAlign: 'left' }}>{club.name.ar}</td>
                       <td style={{ padding: '12px 16px', fontFamily: 'var(--onest)', color: 'var(--t2)' }} className="clubs-col-league">{leagueName(club.leagueId)}</td>
                       <td style={{ padding: '12px 16px' }} className="clubs-col-country">
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -304,7 +304,7 @@ export default function ClubsPage() {
                   <input value={draft.nameAr}
                     onChange={e => { const v = e.target.value; if (/[a-zA-Z]/.test(v)) return; setDraft(d => ({ ...d, nameAr: v })) }}
                     placeholder="الأهلي"
-                    style={{ ...inp(errors.nameAr), fontFamily: 'var(--amiri)', fontSize: 16, direction: 'rtl' }}
+                    style={{ ...inp(errors.nameAr), fontFamily: 'var(--arabic)', fontSize: 16, direction: 'rtl' }}
                   />
                   {errors.nameAr && <div style={{ fontSize: 11, color: '#C8102E', marginTop: 3 }}>{errors.nameAr}</div>}
                 </div>

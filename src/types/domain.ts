@@ -109,8 +109,11 @@ export interface PlayerMatch {
 
 export interface PlayerAnalysis {
   playerId: string;
-  // All computed from PlayerMatch rows — never entered manually
+  // Appearances are admin-entered — a player can have multiple videos of the
+  // same match, so match count is not a reliable count of appearances.
   totalAppearances: number;
+  // Goals / assists / minutes are derived from PlayerMatch rows and may be
+  // overridden by an admin via analysisStats.
   totalGoals: number;
   totalAssists: number;
   totalMinutes: number;

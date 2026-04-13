@@ -136,7 +136,7 @@ export default function HomePage() {
           </h1>
 
           <div className="anim-3" style={{
-            fontFamily: 'var(--amiri)', fontSize: 20, fontWeight: 700,
+            fontFamily: 'var(--arabic)', fontSize: 20, fontWeight: 700,
             color: 'var(--t3)', direction: 'rtl', textAlign: 'left',
             marginTop: 14,
           }}>
@@ -256,7 +256,7 @@ export default function HomePage() {
                 <div style={{ fontFamily: 'var(--onest)', fontSize: 17, fontWeight: 800, color: '#fff', lineHeight: 1.1 }}>
                   Mohamed Ibrahim
                 </div>
-                <div style={{ fontFamily: 'var(--amiri)', fontSize: 13, color: 'rgba(255,255,255,.4)', marginTop: 2, direction: 'rtl', textAlign: 'left' }}>
+                <div style={{ fontFamily: 'var(--arabic)', fontSize: 13, color: 'rgba(255,255,255,.4)', marginTop: 2, direction: 'rtl', textAlign: 'left' }}>
                   محمد إبراهيم
                 </div>
               </div>
@@ -533,7 +533,7 @@ export default function HomePage() {
             <span style={{ fontFamily: 'var(--onest)', fontSize: 9, letterSpacing: '.12em', color: 'var(--t3)' }}>PLAYER MANAGEMENT</span>
           </div>
         </div>
-        <div style={{ fontFamily: 'var(--amiri)', fontSize: 14, color: 'var(--t4)' }}>
+        <div style={{ fontFamily: 'var(--arabic)', fontSize: 14, color: 'var(--t4)' }}>
           الاتحاد المصري لكرة القدم
         </div>
         <div style={{ fontFamily: 'var(--onest)', fontSize: 11, color: 'var(--t4)' }}>

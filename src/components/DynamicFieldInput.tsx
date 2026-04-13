@@ -22,7 +22,7 @@ function InlineInput({
     border: `1px solid ${focused ? 'var(--red)' : 'var(--border2)'}`,
     borderRadius: 'var(--r)',
     background: 'var(--bg)',
-    fontFamily: isAr ? 'var(--amiri)' : 'var(--onest)',
+    fontFamily: isAr ? 'var(--arabic)' : 'var(--onest)',
     fontSize: isAr ? 15 : 13,
     fontWeight: 500,
     color: 'var(--t1)',

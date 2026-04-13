@@ -29,10 +29,11 @@ interface Props {
   asset: MediaAsset
   onNoteAdded?: (note: VideoNote) => void
   onNoteDeleted?: (noteId: string) => void
+  onNoteEdited?: (note: VideoNote) => void
   currentUser?: string
 }
 
-export function VideoPlayer({ asset, onNoteAdded, onNoteDeleted, currentUser = 'Staff' }: Props) {
+export function VideoPlayer({ asset, onNoteAdded, onNoteDeleted, onNoteEdited, currentUser = 'Staff' }: Props) {
   const videoRef     = useRef<HTMLVideoElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const progressRef  = useRef<HTMLDivElement>(null)
@@ -52,6 +53,8 @@ export function VideoPlayer({ asset, onNoteAdded, onNoteDeleted, currentUser = '
   const [hoveredTs,    setHoveredTs]    = useState<number | null>(null)
   const [notes,        setNotes]        = useState<VideoNote[]>(asset.notes ?? [])
   const [savingNote,   setSavingNote]   = useState(false)
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null)
+  const [editingText,   setEditingText]   = useState('')
 
   useEffect(() => { setNotes(asset.notes ?? []) }, [asset.notes])
 
@@ -156,10 +159,39 @@ export function VideoPlayer({ asset, onNoteAdded, onNoteDeleted, currentUser = '
   }
 
   const deleteNote = async (noteId: string) => {
-    await apiFetch(`/api/media/${asset.id}/notes/${noteId}`, { method: 'DELETE' })
+    const res = await apiFetch(`/api/media/${asset.id}/notes/${noteId}`, { method: 'DELETE' })
+    if (!res.ok) return
     setNotes(n => n.filter(x => x.id !== noteId))
     onNoteDeleted?.(noteId)
   }
+
+  const startEditNote = (note: VideoNote) => {
+    setEditingNoteId(note.id)
+    setEditingText(note.text)
+  }
+
+  const cancelEditNote = () => {
+    setEditingNoteId(null)
+    setEditingText('')
+  }
+
+  const saveEditNote = async () => {
+    if (!editingNoteId) return
+    const trimmed = editingText.trim()
+    if (!trimmed) return
+    const res = await apiFetch(`/api/media/${asset.id}/notes/${editingNoteId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: trimmed }),
+    })
+    if (!res.ok) return
+    const updated = await res.json() as VideoNote
+    setNotes(ns => ns.map(n => n.id === updated.id ? updated : n))
+    onNoteEdited?.(updated)
+    cancelEditNote()
+  }
+
+  const isOwnNote = (note: VideoNote) => note.authorName === currentUser
 
   const jumpToNote = (note: VideoNote) => {
     if (videoRef.current) videoRef.current.currentTime = note.timestamp
@@ -423,33 +455,87 @@ export function VideoPlayer({ asset, onNoteAdded, onNoteDeleted, currentUser = '
               </div>
             </div>
           ) : (
-            [...notes].sort((a, b) => a.timestamp - b.timestamp).map(note => (
+            [...notes].sort((a, b) => a.timestamp - b.timestamp).map(note => {
+              const own = isOwnNote(note)
+              const isEditing = editingNoteId === note.id
+              return (
               <div key={note.id}
-                onClick={() => jumpToNote(note)}
-                onMouseEnter={e => { if (note.id !== activeNote) e.currentTarget.style.background = 'var(--bg3)' }}
-                onMouseLeave={e => { if (note.id !== activeNote) e.currentTarget.style.background = 'transparent' }}
+                onClick={() => { if (!isEditing) jumpToNote(note) }}
+                onMouseEnter={e => { if (note.id !== activeNote && !isEditing) e.currentTarget.style.background = 'var(--bg3)' }}
+                onMouseLeave={e => { if (note.id !== activeNote && !isEditing) e.currentTarget.style.background = 'transparent' }}
                 style={{
-                  padding: '8px 10px', borderRadius: 6, marginBottom: 4, cursor: 'pointer',
-                  border: `1px solid ${note.id === activeNote ? 'var(--redBorder)' : 'transparent'}`,
-                  background: note.id === activeNote ? 'var(--redDim)' : 'transparent',
+                  padding: '8px 10px', borderRadius: 6, marginBottom: 4, cursor: isEditing ? 'default' : 'pointer',
+                  border: `1px solid ${note.id === activeNote ? 'var(--redBorder)' : isEditing ? 'var(--border2)' : 'transparent'}`,
+                  background: note.id === activeNote ? 'var(--redDim)' : isEditing ? 'var(--bg3)' : 'transparent',
                   transition: 'all .12s', display: 'flex', gap: 8, alignItems: 'flex-start', position: 'relative',
                 }}
               >
                 <div style={{ fontFamily: 'var(--onest)', fontSize: 11, fontWeight: 800, color: 'var(--red)', minWidth: 38, flexShrink: 0, paddingTop: 1 }}>
                   {fmtTime(note.timestamp)}
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontFamily: 'var(--onest)', fontSize: 12, color: 'var(--t1)', lineHeight: 1.5 }}>{note.text}</div>
-                  <div style={{ fontFamily: 'var(--onest)', fontSize: 10, color: 'var(--t3)', marginTop: 2 }}>{note.authorName}</div>
+                <div style={{ flex: 1, minWidth: 0 }} onClick={e => isEditing && e.stopPropagation()}>
+                  {isEditing ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <textarea
+                        value={editingText}
+                        onChange={e => setEditingText(e.target.value)}
+                        onClick={e => e.stopPropagation()}
+                        rows={2}
+                        autoFocus
+                        style={{
+                          width: '100%', fontFamily: 'var(--onest)', fontSize: 12, color: 'var(--t1)',
+                          border: '1px solid var(--border2)', borderRadius: 5, padding: '6px 8px',
+                          background: 'var(--bg)', outline: 'none', resize: 'vertical' as const,
+                        }}
+                      />
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button
+                          onClick={e => { e.stopPropagation(); saveEditNote() }}
+                          disabled={!editingText.trim()}
+                          style={{
+                            fontFamily: 'var(--onest)', fontSize: 10, fontWeight: 700,
+                            padding: '4px 10px', borderRadius: 4,
+                            border: '1px solid var(--red)',
+                            background: editingText.trim() ? 'var(--red)' : 'var(--s2)',
+                            color: editingText.trim() ? '#fff' : 'var(--t4)',
+                            cursor: editingText.trim() ? 'pointer' : 'not-allowed',
+                          }}
+                        >Save</button>
+                        <button
+                          onClick={e => { e.stopPropagation(); cancelEditNote() }}
+                          style={{
+                            fontFamily: 'var(--onest)', fontSize: 10, fontWeight: 600,
+                            padding: '4px 10px', borderRadius: 4,
+                            border: '1px solid var(--border2)', background: 'transparent',
+                            color: 'var(--t2)', cursor: 'pointer',
+                          }}
+                        >Cancel</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div style={{ fontFamily: 'var(--onest)', fontSize: 12, color: 'var(--t1)', lineHeight: 1.5 }}>{note.text}</div>
+                      <div style={{ fontFamily: 'var(--onest)', fontSize: 10, color: 'var(--t3)', marginTop: 2 }}>{note.authorName}{own ? ' · you' : ''}</div>
+                    </>
+                  )}
                 </div>
-                <button
-                  onClick={e => { e.stopPropagation(); deleteNote(note.id) }}
-                  onMouseEnter={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.color = 'var(--red)'; e.currentTarget.style.background = 'var(--redDim)' }}
-                  onMouseLeave={e => { e.currentTarget.style.opacity = '0' }}
-                  style={{ fontFamily: 'var(--onest)', fontSize: 11, color: 'var(--t4)', background: 'transparent', border: 'none', cursor: 'pointer', padding: '2px 4px', borderRadius: 3, flexShrink: 0, opacity: 0, transition: 'all .12s' }}
-                >✕</button>
+                {own && !isEditing && (
+                  <div style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
+                    <button
+                      onClick={e => { e.stopPropagation(); startEditNote(note) }}
+                      title="Edit note"
+                      style={{ fontFamily: 'var(--onest)', fontSize: 11, color: 'var(--t3)', background: 'transparent', border: 'none', cursor: 'pointer', padding: '2px 6px', borderRadius: 3 }}
+                    >✎</button>
+                    <button
+                      onClick={e => { e.stopPropagation(); deleteNote(note.id) }}
+                      title="Delete note"
+                      style={{ fontFamily: 'var(--onest)', fontSize: 11, color: 'var(--t3)', background: 'transparent', border: 'none', cursor: 'pointer', padding: '2px 6px', borderRadius: 3 }}
+                    >✕</button>
+                  </div>
+                )}
               </div>
-            ))
+              )
+            })
           )}
         </div>
 

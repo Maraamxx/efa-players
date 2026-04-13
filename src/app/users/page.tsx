@@ -190,7 +190,7 @@ export default function UsersPage() {
                 </div>
                 <div style={{ padding: '10px 8px 10px 0' }}>
                   <div style={{ fontFamily: 'var(--onest)', fontSize: 13, fontWeight: 600, color: 'var(--t1)' }}>{u.nameEn}</div>
-                  <div style={{ fontFamily: 'var(--amiri)', fontSize: 12, color: 'var(--t3)', direction: 'rtl', textAlign: 'right' }}>{u.nameAr}</div>
+                  <div style={{ fontFamily: 'var(--arabic)', fontSize: 12, color: 'var(--t3)', direction: 'rtl', textAlign: 'right' }}>{u.nameAr}</div>
                 </div>
                 <div style={{ fontFamily: 'var(--onest)', fontSize: 12, color: 'var(--t2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{u.email}</div>
                 <div>
@@ -235,7 +235,7 @@ export default function UsersPage() {
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontFamily: 'var(--onest)', fontSize: 14, fontWeight: 600, color: 'var(--t1)' }}>{u.nameEn}</div>
-                        {u.nameAr && <div style={{ fontFamily: 'var(--amiri)', fontSize: 13, color: 'var(--t3)', direction: 'rtl' as const }}>{u.nameAr}</div>}
+                        {u.nameAr && <div style={{ fontFamily: 'var(--arabic)', fontSize: 13, color: 'var(--t3)', direction: 'rtl' as const }}>{u.nameAr}</div>}
                       </div>
                       <span style={{ fontFamily: 'var(--onest)', fontSize: 10, fontWeight: 600, padding: '3px 8px', borderRadius: 4, background: u.isActive ? 'rgba(22,163,74,.08)' : 'rgba(200,16,46,.08)', border: `1px solid ${u.isActive ? 'rgba(22,163,74,.2)' : 'rgba(200,16,46,.2)'}`, color: u.isActive ? '#16A34A' : '#C8102E', flexShrink: 0 }}>
                         {u.isActive ? 'Active' : 'Inactive'}
@@ -291,7 +291,7 @@ export default function UsersPage() {
                   const v = e.target.value
                   if (/[a-zA-Z]/.test(v)) return
                   setDraft(d => ({ ...d, nameAr: v }))
-                }} style={{ ...inp(errors.nameAr), fontFamily: 'var(--amiri)', fontSize: 15, direction: 'rtl' as const }} placeholder="الاسم بالعربية" />
+                }} style={{ ...inp(errors.nameAr), fontFamily: 'var(--arabic)', fontSize: 15, direction: 'rtl' as const }} placeholder="الاسم بالعربية" />
                 {errors.nameAr && <div style={{ fontFamily: 'var(--onest)', fontSize: 11, color: '#C8102E', marginTop: 3 }}>{errors.nameAr}</div>}
               </div>
               {/* Email */}

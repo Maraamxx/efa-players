@@ -186,7 +186,7 @@ export default function LeaguesPage() {
                     style={{ borderRadius: 2, boxShadow: '0 0 0 1px var(--border)', flexShrink: 0 }} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontFamily: 'var(--onest)', fontSize: 14, fontWeight: 700, color: 'var(--t1)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{league.name.en}</div>
-                    <div style={{ fontFamily: 'var(--amiri)', fontSize: 13, color: 'var(--t3)', direction: 'rtl', textAlign: 'left', marginTop: 1 }}>{league.name.ar}</div>
+                    <div style={{ fontFamily: 'var(--arabic)', fontSize: 13, color: 'var(--t3)', direction: 'rtl', textAlign: 'left', marginTop: 1 }}>{league.name.ar}</div>
                     <div style={{ fontFamily: 'var(--onest)', fontSize: 11, color: 'var(--t3)', marginTop: 2 }}>{league.season}</div>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 5, flexShrink: 0 }}>
@@ -221,7 +221,7 @@ export default function LeaguesPage() {
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                     >
                       <td style={{ padding: '12px 16px', fontFamily: 'var(--onest)', fontWeight: 700, color: 'var(--t1)' }}>{league.name.en}</td>
-                      <td style={{ padding: '12px 16px', fontFamily: 'var(--amiri)', fontSize: 15, color: 'var(--t2)', direction: 'rtl', textAlign: 'left' }}>{league.name.ar}</td>
+                      <td style={{ padding: '12px 16px', fontFamily: 'var(--arabic)', fontSize: 15, color: 'var(--t2)', direction: 'rtl', textAlign: 'left' }}>{league.name.ar}</td>
                       <td style={{ padding: '12px 16px' }} className="leagues-col-country">
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                           <img src={`https://flagcdn.com/20x15/${league.country.toLowerCase()}.png`} alt={league.country} style={{ borderRadius: 2, boxShadow: '0 0 0 1px var(--border)' }} />
@@ -285,7 +285,7 @@ export default function LeaguesPage() {
                   <input value={draft.nameAr}
                     onChange={e => { const v = e.target.value; if (/[a-zA-Z]/.test(v)) return; setDraft(d => ({ ...d, nameAr: v })) }}
                     placeholder="الدوري المصري"
-                    style={{ ...inp(errors.nameAr), fontFamily: 'var(--amiri)', fontSize: 16, direction: 'rtl' }} />
+                    style={{ ...inp(errors.nameAr), fontFamily: 'var(--arabic)', fontSize: 16, direction: 'rtl' }} />
                   {errors.nameAr && <div style={{ fontSize: 11, color: '#C8102E', marginTop: 3 }}>{errors.nameAr}</div>}
                 </div>
                 <div>

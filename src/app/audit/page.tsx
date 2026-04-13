@@ -194,7 +194,7 @@ function DiffRow({ field, before, after }: { field: string; before: unknown; aft
         return (
           <span>
             {o.en ? <span style={{ marginRight: 8 }}>{String(o.en)}</span> : null}
-            {o.ar ? <span style={{ fontFamily: 'var(--amiri)', fontSize: 14, direction: 'rtl' }}>{String(o.ar)}</span> : null}
+            {o.ar ? <span style={{ fontFamily: 'var(--arabic)', fontSize: 14, direction: 'rtl' }}>{String(o.ar)}</span> : null}
           </span>
         )
       }

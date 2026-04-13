@@ -93,14 +93,16 @@ export async function clientFetch(url: string, options: RequestInit = {}): Promi
       const pm = store.matches.filter(m => m.playerId === path[1])
       const pl = store.players.find(p => p.id === path[1]) as any
       const overrides = (pl?.analysisStats ?? {}) as Record<string, number>
+      // Appearances are admin-entered, not computed from match count.
       const computed = {
-        totalAppearances: pm.length,
         totalGoals: pm.reduce((s, m) => s + m.goalsScored, 0),
         totalAssists: pm.reduce((s, m) => s + m.assists, 0),
         totalMinutes: pm.reduce((s, m) => s + m.minutesPlayed, 0),
       }
       return res({
-        playerId: path[1], ...computed, ...overrides, _computed: computed,
+        playerId: path[1],
+        totalAppearances: overrides.totalAppearances ?? 0,
+        ...computed, ...overrides, _computed: computed,
         dynamicFieldValues: (pl?.analysisFieldValues as any[]) ?? [], videos: [],
       })
     }
@@ -281,6 +283,20 @@ export async function clientFetch(url: string, options: RequestInit = {}): Promi
       saveStore(); return after ? res(after) : notFound()
     }
 
+    if (path[0] === 'media' && path[2] === 'notes' && path[3]) {
+      const asset = store.media.find(m => m.id === path[1])
+      const existing = asset?.notes.find(n => n.id === path[3])
+      if (!existing) return notFound()
+      if (existing.authorName !== user.name) {
+        return res({ error: 'You can only edit your own notes' }, 403)
+      }
+      const updated = { ...existing, text: typeof body.text === 'string' ? body.text : existing.text }
+      store.media = store.media.map(m =>
+        m.id === path[1] ? { ...m, notes: m.notes.map(n => n.id === path[3] ? updated : n) } : m
+      )
+      saveStore(); return res(updated)
+    }
+
     if (path[0] === 'clubs' && path.length === 2) {
       store.clubs = store.clubs.map(c => c.id === path[1] ? { ...c, ...body } : c)
       const after = store.clubs.find(c => c.id === path[1])
@@ -313,17 +329,20 @@ export async function clientFetch(url: string, options: RequestInit = {}): Promi
         p.id === path[1] ? { ...p, analysisStats: { ...((p as any).analysisStats ?? {}), ...body }, updatedAt: new Date().toISOString() } : p
       )
       saveStore()
-      // Return the computed analysis
       const pm = store.matches.filter(m => m.playerId === path[1])
       const pl = store.players.find(p => p.id === path[1]) as any
       const overrides = (pl?.analysisStats ?? {}) as Record<string, number>
       const computed = {
-        totalAppearances: pm.length,
         totalGoals: pm.reduce((s, m) => s + m.goalsScored, 0),
         totalAssists: pm.reduce((s, m) => s + m.assists, 0),
         totalMinutes: pm.reduce((s, m) => s + m.minutesPlayed, 0),
       }
-      return res({ playerId: path[1], ...computed, ...overrides, _computed: computed, dynamicFieldValues: (pl?.analysisFieldValues as any[]) ?? [], videos: [] })
+      return res({
+        playerId: path[1],
+        totalAppearances: overrides.totalAppearances ?? 0,
+        ...computed, ...overrides, _computed: computed,
+        dynamicFieldValues: (pl?.analysisFieldValues as any[]) ?? [], videos: [],
+      })
     }
 
     return notFound()
@@ -364,6 +383,11 @@ export async function clientFetch(url: string, options: RequestInit = {}): Promi
     }
 
     if (path[0] === 'media' && path[2] === 'notes' && path[3]) {
+      const asset = store.media.find(m => m.id === path[1])
+      const existing = asset?.notes.find(n => n.id === path[3])
+      if (existing && existing.authorName !== user.name) {
+        return res({ error: 'You can only delete your own notes' }, 403)
+      }
       store.media = store.media.map(m => m.id === path[1] ? { ...m, notes: m.notes.filter(n => n.id !== path[3]) } : m)
       saveStore(); return res({ success: true })
     }

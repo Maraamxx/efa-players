@@ -10,7 +10,7 @@ import { VideoUploadButton } from '@/components/VideoUploadButton'
 import { apiFetch } from '@/lib/apiFetch'
 import { AppNav } from '@/components/AppNav'
 import { DynamicFieldInput } from '@/components/DynamicFieldInput'
-import { useCan } from '@/lib/auth'
+import { useCan, useAuth } from '@/lib/auth'
 import { fmtDate } from '@/lib/dates'
 import { useToast } from '@/components/Toast'
 import { useEscKey } from '@/lib/useEscKey'
@@ -54,7 +54,7 @@ function InlineInput({
     border: `1px solid ${focused ? 'var(--red)' : 'var(--border2)'}`,
     borderRadius: 'var(--r)',
     background: 'var(--bg)',
-    fontFamily: isAr ? 'var(--amiri)' : 'var(--onest)',
+    fontFamily: isAr ? 'var(--arabic)' : 'var(--onest)',
     fontSize: isAr ? 15 : 13,
     fontWeight: 500,
     color: 'var(--t1)',
@@ -595,6 +595,7 @@ type Tab = 'information' | 'matches' | 'analysis'
 
 export default function PlayerProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
+  const { user: currentUser } = useAuth()
   const canEditPlayers  = useCan('players', 'edit')
   const canDeletePlayers = useCan('players', 'delete')
   const canCreateMatches = useCan('matches', 'create')
@@ -808,12 +809,12 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        matchName:     matchEditDraft.matchName,
-        matchDate:     matchEditDraft.matchDate,
+        matchName:     (matchEditDraft.matchName ?? '').trim() || 'Untitled match',
+        matchDate:     matchEditDraft.matchDate || editingMatch.matchDate,
         competition:   matchEditDraft.competition || null,
-        minutesPlayed: Number(matchEditDraft.minutesPlayed),
-        goalsScored:   Number(matchEditDraft.goalsScored),
-        assists:       Number(matchEditDraft.assists),
+        minutesPlayed: matchEditDraft.minutesPlayed === '' || matchEditDraft.minutesPlayed == null ? 0 : Number(matchEditDraft.minutesPlayed),
+        goalsScored:   matchEditDraft.goalsScored === '' || matchEditDraft.goalsScored == null ? 0 : Number(matchEditDraft.goalsScored),
+        assists:       matchEditDraft.assists === '' || matchEditDraft.assists == null ? 0 : Number(matchEditDraft.assists),
         notes:         matchEditDraft.notes || null,
       }),
     })
@@ -842,23 +843,21 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
   const leagueName = (lid: string | null) => leagues.find(l => l.id === lid)?.name.en ?? '—'
 
   // ── submit match ──
+  // All match fields are optional. We fall back to sensible defaults when
+  // omitted so "add match" works as a lightweight note-capture flow.
   const submitMatch = async () => {
-    const e: Record<string, string> = {}
-    if (!newMatch.matchDate)           e.matchDate     = 'Required'
-    if (!newMatch.matchName?.trim())   e.matchName     = 'Required'
-    if (!newMatch.minutesPlayed)       e.minutesPlayed = 'Required'
-    if (Object.keys(e).length) { setMatchFormErrors(e); return }
+    setMatchFormErrors({})
     setMatchSaving(true)
     await apiFetch(`/api/players/${id}/matches`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        matchName:     newMatch.matchName.trim(),
-        matchDate:     newMatch.matchDate,
+        matchName:     newMatch.matchName.trim() || 'Untitled match',
+        matchDate:     newMatch.matchDate || new Date().toISOString().slice(0, 10),
         competition:   newMatch.competition.trim() || null,
-        minutesPlayed: Number(newMatch.minutesPlayed),
-        goalsScored:   Number(newMatch.goalsScored),
-        assists:       Number(newMatch.assists),
+        minutesPlayed: newMatch.minutesPlayed === '' ? 0 : Number(newMatch.minutesPlayed),
+        goalsScored:   newMatch.goalsScored === '' ? 0 : Number(newMatch.goalsScored),
+        assists:       newMatch.assists === '' ? 0 : Number(newMatch.assists),
         notes:         newMatch.notes.trim() || null,
         videos:        [],
         dynamicFieldValues: Object.entries(newMatch.dynamicFields ?? {})
@@ -947,7 +946,7 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
             <div style={{ fontFamily: 'var(--onest)', fontSize: 26, fontWeight: 800, letterSpacing: '-.025em', color: 'var(--t1)', lineHeight: 1 }}>
               {player.name?.en}
             </div>
-            <div style={{ fontFamily: 'var(--amiri)', fontSize: 17, fontStyle: 'italic', color: 'var(--t2)', marginTop: 3, direction: 'rtl', textAlign: 'left' }}>
+            <div style={{ fontFamily: 'var(--arabic)', fontSize: 16, fontWeight: 500, color: 'var(--t2)', marginTop: 3, direction: 'rtl', textAlign: 'left' }}>
               {player.name?.ar}
             </div>
 
@@ -979,7 +978,7 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
             </div>
             <div style={{ display: 'flex', gap: 6 }}>
               {[
-                { n: (analysis?.totalAppearances ?? matches.length) || '—', l: 'Apps'    },
+                { n: analysis?.totalAppearances || '—', l: 'Apps'    },
                 { n: (analysis?.totalGoals ?? totalGoals) || '—',     l: 'Goals'   },
                 { n: (analysis?.totalAssists ?? totalAssists) || '—',   l: 'Assists' },
               ].map(s => (
@@ -1098,11 +1097,11 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
                   display={<span style={{ fontFamily: 'var(--onest)', fontWeight: 600 }}>{player.name?.en}</span>}
                   edit={<InlineInput value={draftPersonal.nameEn ?? ''} onChange={v => setDraftPersonal((d: any) => ({ ...d, nameEn: v }))} lang="en" placeholder="English name only" />}
                 />
-                <InfoRow label="Name (AR)"     editing={editing}
+                <InfoRow label="Name (AR)"     editing={editing} required
                   display={<span style={{ ...textStyle(player.name?.ar ?? ''), fontSize: 15 }}>{player.name?.ar}</span>}
                   edit={<InlineInput value={draftPersonal.nameAr ?? ''} onChange={v => setDraftPersonal((d: any) => ({ ...d, nameAr: v }))} lang="ar" placeholder="الاسم بالعربية فقط" />}
                 />
-                <InfoRow label="Date of birth" editing={editing}
+                <InfoRow label="Date of birth" editing={editing} required
                   display={<span>{player.birthdate ? `${fmtDate(player.birthdate)} · ${age(player.birthdate)} yrs` : '—'}</span>}
                   edit={<InlineInput value={draftPersonal.birthdate ?? ''} onChange={v => setDraftPersonal((d: any) => ({ ...d, birthdate: v }))} type="date"  />}
                 />
@@ -1120,7 +1119,7 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
                   display={<span style={{ fontFamily: 'var(--onest)', fontSize: 12, letterSpacing: '.1em', color: 'var(--t2)' }}>{player.idNumber ? `${player.idNumber.slice(0,3)}${'•'.repeat(player.idNumber.length - 3)}` : '—'}</span>}
                   edit={<InlineInput value={draftPersonal.idNumber ?? ''} onChange={v => setDraftPersonal((d: any) => ({ ...d, idNumber: v.replace(/\D/g, '').slice(0, 14) }))} type="tel" placeholder="14-digit national ID" />}
                 />
-                <InfoRow label="Photo" editing={editing}
+                <InfoRow label="Photo" editing={editing} required
                   display={
                     player.photoUrl
                       ? <img src={player.photoUrl} alt="" style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border2)' }} />
@@ -1215,7 +1214,7 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
                         {leagueName(player.currentLeagueId)}
                       </div>
                       {leagues.find(l => l.id === player.currentLeagueId)?.name.ar && leagues.find(l => l.id === player.currentLeagueId)?.name.ar !== '-' && (
-                        <div style={{ fontFamily: 'var(--amiri)', fontSize: 13, color: 'var(--t3)', direction: 'rtl' as const, textAlign: 'left' as const, marginTop: 1 }}>
+                        <div style={{ fontFamily: 'var(--arabic)', fontSize: 13, color: 'var(--t3)', direction: 'rtl' as const, textAlign: 'left' as const, marginTop: 1 }}>
                           {leagues.find(l => l.id === player.currentLeagueId)?.name.ar}
                         </div>
                       )}
@@ -1236,7 +1235,7 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
                         {clubName(player.currentClubId)}
                       </div>
                       {clubs.find(c => c.id === player.currentClubId)?.name.ar && clubs.find(c => c.id === player.currentClubId)?.name.ar !== '-' && (
-                        <div style={{ fontFamily: 'var(--amiri)', fontSize: 13, color: 'var(--t3)', direction: 'rtl' as const, textAlign: 'left' as const, marginTop: 1 }}>
+                        <div style={{ fontFamily: 'var(--arabic)', fontSize: 13, color: 'var(--t3)', direction: 'rtl' as const, textAlign: 'left' as const, marginTop: 1 }}>
                           {clubs.find(c => c.id === player.currentClubId)?.name.ar}
                         </div>
                       )}
@@ -1717,7 +1716,7 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
 <div
   className="stat-cards-4"
   style={{ gridColumn: 'span 3', display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12 }}
->            <StatCard label="Appearances" value={analysis?.totalAppearances ?? matches.length} />
+>            <StatCard label="Appearances" value={analysis?.totalAppearances ?? 0} />
             <StatCard label="Goals"       value={analysis?.totalGoals ?? totalGoals} />
             <StatCard label="Assists"     value={analysis?.totalAssists ?? totalAssists} />
             <StatCard label="Minutes"     value={(analysis?.totalMinutes ?? totalMins).toLocaleString()} />
@@ -1801,60 +1800,74 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
                           </div>
                         </td>
                       </tr>
+                      {((matchMedia[m.id]?.length ?? 0) > 0 || canUploadMedia) && (
                       <tr key={`${m.id}-media`} style={{ borderBottom: '1px solid var(--border)' }}>
-                        <td colSpan={8} style={{ padding: '6px 16px 12px' }}>
-                          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' as const, alignItems: 'flex-start' }}>
-                            {(matchMedia[m.id] ?? []).map(asset => (
-                              <div
-                                key={asset.id}
-                                onClick={() => setOpenPlayer(asset)}
-                                style={{ width: 160, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--border)', background: 'var(--bg)', cursor: 'pointer', transition: 'all .18s' }}
-                                onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(200,16,46,.35)'; e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(200,16,46,.08)' }}
-                                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none' }}
-                              >
-                                <div style={{ height: 80, background: '#0A0A0A', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                  <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px)', backgroundSize: '12px 12px' }} />
-                                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg,transparent 40%,rgba(0,0,0,.6))' }} />
-                                  <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,.15)', border: '1.5px solid rgba(255,255,255,.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 1 }}>
-                                    <div style={{ width: 0, height: 0, borderStyle: 'solid', borderWidth: '6px 0 6px 11px', borderColor: 'transparent transparent transparent #fff', marginLeft: 2 }} />
-                                  </div>
-                                  {asset.durationSeconds && (
-                                    <div style={{ position: 'absolute', bottom: 5, right: 7, zIndex: 1, fontFamily: 'var(--onest)', fontSize: 10, fontWeight: 700, color: '#fff', background: 'rgba(0,0,0,.55)', padding: '1px 5px', borderRadius: 3 }}>
-                                      {fmtTime(asset.durationSeconds)}
-                                    </div>
-                                  )}
-                                </div>
-                                <div style={{ padding: '7px 9px' }}>
-                                  <div style={{ fontFamily: 'var(--onest)', fontSize: 11, fontWeight: 600, color: 'var(--t1)', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 3 }}>
-                                    {asset.originalFilename}
-                                  </div>
-                                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                    <span style={{ fontFamily: 'var(--onest)', fontSize: 10, color: 'var(--t3)' }}>{fmtSize(asset.sizeBytes)}</span>
-                                    {asset.notes.length > 0 && (
-                                      <span style={{ fontFamily: 'var(--onest)', fontSize: 10, fontWeight: 600, padding: '1px 5px', borderRadius: 3, background: 'var(--redDim)', border: '1px solid var(--redBorder)', color: 'var(--red)', display: 'flex', alignItems: 'center', gap: 3 }}>
-                                        💬 {asset.notes.length}
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                            {canUploadMedia && (
-                              <div
-                                style={{ width: 160, height: 115, borderRadius: 8, border: '1.5px dashed var(--border2)', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', gap: 6, transition: 'all .18s', background: 'transparent' }}
-                                onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--red)'; e.currentTarget.style.background = 'var(--redDim)' }}
-                                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border2)'; e.currentTarget.style.background = 'transparent' }}
-                              >
+                        <td colSpan={8} style={{ padding: '0 16px 14px' }}>
+                          <div className="match-videos">
+                            <div className="match-videos-header">
+                              <span className="match-videos-label">
+                                Videos
+                                <span className="match-videos-count">{matchMedia[m.id]?.length ?? 0}</span>
+                              </span>
+                              {canUploadMedia && (matchMedia[m.id]?.length ?? 0) > 0 && (
                                 <VideoUploadButton
                                   entityType="match"
                                   entityId={m.id}
                                   onUploaded={asset => setMatchMedia(prev => ({ ...prev, [m.id]: [...(prev[m.id] ?? []), asset] }))}
                                 />
+                              )}
+                            </div>
+                            {(matchMedia[m.id]?.length ?? 0) === 0 ? (
+                              <div className="match-videos-empty">
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '6px 0' }}>
+                                  <span>No videos yet for this match.</span>
+                                  {canUploadMedia && (
+                                    <VideoUploadButton
+                                      entityType="match"
+                                      entityId={m.id}
+                                      onUploaded={asset => setMatchMedia(prev => ({ ...prev, [m.id]: [...(prev[m.id] ?? []), asset] }))}
+                                    />
+                                  )}
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="match-videos-strip">
+                                {(matchMedia[m.id] ?? []).map(asset => {
+                                  const title = asset.originalFilename?.replace(/\.[^/.]+$/, '') ?? 'Untitled video'
+                                  return (
+                                    <div
+                                      key={asset.id}
+                                      className="video-card"
+                                      onClick={() => setOpenPlayer(asset)}
+                                      title={asset.originalFilename}
+                                    >
+                                      <div className="video-card-thumb">
+                                        <div className="video-card-play">
+                                          <div style={{ width: 0, height: 0, borderStyle: 'solid', borderWidth: '6px 0 6px 11px', borderColor: 'transparent transparent transparent #fff', marginLeft: 3 }} />
+                                        </div>
+                                        {asset.notes.length > 0 && (
+                                          <span className="video-card-notes-badge">{asset.notes.length} note{asset.notes.length === 1 ? '' : 's'}</span>
+                                        )}
+                                        {asset.durationSeconds != null && (
+                                          <span className="video-card-duration">{fmtTime(asset.durationSeconds)}</span>
+                                        )}
+                                      </div>
+                                      <div className="video-card-body">
+                                        <div className="video-card-title">{title}</div>
+                                        <div className="video-card-meta">
+                                          <span>{fmtSize(asset.sizeBytes)}</span>
+                                          {asset.uploadedAt && <span>{fmtDate(asset.uploadedAt)}</span>}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )
+                                })}
                               </div>
                             )}
                           </div>
                         </td>
                       </tr>
+                      )}
                     </React.Fragment>
                   ))}
                 </tbody>
@@ -1951,9 +1964,14 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
               onFocus={e => (e.currentTarget.style.borderColor = 'var(--red)')}
               onBlur={e => (e.currentTarget.style.borderColor = 'var(--border2)')}
             />
-            {(analysis as any)._computed && (
+            {(analysis as any)._computed?.[f.key] != null && (
               <div style={{ fontFamily: 'var(--onest)', fontSize: 10, color: 'var(--t4)', marginTop: 4 }}>
                 Auto: {(analysis as any)._computed[f.key]}
+              </div>
+            )}
+            {f.key === 'totalAppearances' && (
+              <div style={{ fontFamily: 'var(--onest)', fontSize: 10, color: 'var(--t4)', marginTop: 4 }}>
+                Manual only
               </div>
             )}
           </div>
@@ -2140,7 +2158,7 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
       }}>
         <div>
           <div style={{ fontFamily: 'var(--onest)', fontSize: 11, fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase' as const, color: 'var(--t3)', marginBottom: 5, display: 'flex', justifyContent: 'space-between' }}>
-            <span>Match Name *</span>
+            <span>Match Name</span>
             <span style={{ fontWeight: 400, letterSpacing: 0, textTransform: 'none', color: newMatch.matchName.length > 110 ? 'var(--red)' : 'var(--t4)' }}>{newMatch.matchName.length}/120</span>
           </div>
           <input type="text" value={newMatch.matchName}
@@ -2153,7 +2171,7 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <div>
-            <div style={{ fontFamily: 'var(--onest)', fontSize: 11, fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase' as const, color: 'var(--t3)', marginBottom: 5 }}>Date *</div>
+            <div style={{ fontFamily: 'var(--onest)', fontSize: 11, fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase' as const, color: 'var(--t3)', marginBottom: 5 }}>Date</div>
             <input type="date" value={newMatch.matchDate}
               onChange={e => setNewMatch(m => ({ ...m, matchDate: e.target.value }))}
               style={{ width: '100%', height: 40, border: `1px solid ${matchFormErrors.matchDate ? 'var(--red)' : 'var(--border2)'}`, borderRadius: 'var(--r)', background: 'var(--bg)', fontFamily: 'var(--onest)', fontSize: 13, color: 'var(--t1)', padding: '0 10px', outline: 'none', boxSizing: 'border-box' as any }}
@@ -2172,7 +2190,7 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
           <div>
-            <div style={{ fontFamily: 'var(--onest)', fontSize: 11, fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase' as const, color: 'var(--t3)', marginBottom: 5 }}>Minutes *</div>
+            <div style={{ fontFamily: 'var(--onest)', fontSize: 11, fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase' as const, color: 'var(--t3)', marginBottom: 5 }}>Minutes</div>
             <input type="number" value={newMatch.minutesPlayed}
               onChange={e => setNewMatch(m => ({ ...m, minutesPlayed: e.target.value }))}
               placeholder="90"
@@ -2281,7 +2299,7 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
               {/* Match Name */}
               <div>
                 <div style={{ fontFamily: 'var(--onest)', fontSize: 11, fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase' as const, color: 'var(--t3)', marginBottom: 5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span>Match Name *</span>
+                  <span>Match Name</span>
                   <span style={{ fontWeight: 400, letterSpacing: 0, textTransform: 'none', color: (matchEditDraft.matchName ?? '').length > 110 ? 'var(--red)' : 'var(--t4)' }}>{(matchEditDraft.matchName ?? '').length}/120</span>
                 </div>
                 <input type="text" value={matchEditDraft.matchName ?? ''}
@@ -2293,7 +2311,7 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
               {/* Date + Competition */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 16px' }}>
                 <div>
-                  <div style={{ fontFamily: 'var(--onest)', fontSize: 11, fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase' as const, color: 'var(--t3)', marginBottom: 5 }}>Date *</div>
+                  <div style={{ fontFamily: 'var(--onest)', fontSize: 11, fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase' as const, color: 'var(--t3)', marginBottom: 5 }}>Date</div>
                   <input type="date" value={matchEditDraft.matchDate ?? ''}
                     onChange={e => setMatchEditDraft((d: any) => ({ ...d, matchDate: e.target.value }))}
                     style={{ width: '100%', height: 36, border: '1px solid var(--border2)', borderRadius: 'var(--r)', background: 'var(--bg)', fontFamily: 'var(--onest)', fontSize: 13, color: 'var(--t1)', padding: '0 10px', outline: 'none', boxSizing: 'border-box' }}
@@ -2311,7 +2329,7 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
               {/* Stats row */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0 16px' }}>
                 {([
-                  { label: 'Minutes Played *', key: 'minutesPlayed', type: 'number' },
+                  { label: 'Minutes Played', key: 'minutesPlayed', type: 'number' },
                   { label: 'Goals',            key: 'goalsScored',   type: 'number' },
                   { label: 'Assists',          key: 'assists',       type: 'number' },
                 ] as const).map(f => (
@@ -2404,6 +2422,17 @@ export default function PlayerProfilePage({ params }: { params: Promise<{ id: st
           <div style={{ width: '100%', maxWidth: 1140 }}>
             <VideoPlayer
               asset={openPlayer}
+              currentUser={currentUser?.nameEn}
+              onNoteEdited={note => {
+                const updated = { ...openPlayer, notes: openPlayer.notes.map(n => n.id === note.id ? note : n) }
+                setOpenPlayer(updated)
+                setMatchMedia(prev => {
+                  const key = Object.keys(prev).find(k => prev[k].some(a => a.id === openPlayer.id))
+                  if (!key) return prev
+                  return { ...prev, [key]: prev[key].map(a => a.id === openPlayer.id ? updated : a) }
+                })
+                setAnalysisMedia(prev => prev.map(a => a.id === openPlayer.id ? updated : a))
+              }}
               onNoteAdded={note => {
                 const updated = { ...openPlayer, notes: [...openPlayer.notes, note] }
                 setOpenPlayer(updated)

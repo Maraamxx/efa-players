@@ -72,14 +72,18 @@ export async function GET(
     const pm = store.matches.filter(m => m.playerId === path[1])
     const pl = store.players.find(p => p.id === path[1]) as unknown as Record<string, unknown> | undefined
     const overrides = (pl?.analysisStats ?? {}) as Record<string, number>
+    // Goals / assists / minutes are derived from match rows.
+    // Appearances are entered manually by an admin — a player can have
+    // multiple videos of the same match, so match count is not a reliable
+    // count of actual appearances.
     const computed = {
-      totalAppearances: pm.length,
-      totalGoals:       pm.reduce((s, m) => s + m.goalsScored, 0),
-      totalAssists:     pm.reduce((s, m) => s + m.assists, 0),
-      totalMinutes:     pm.reduce((s, m) => s + m.minutesPlayed, 0),
+      totalGoals:   pm.reduce((s, m) => s + m.goalsScored,  0),
+      totalAssists: pm.reduce((s, m) => s + m.assists,      0),
+      totalMinutes: pm.reduce((s, m) => s + m.minutesPlayed, 0),
     }
     return json({
       playerId:         path[1],
+      totalAppearances: overrides.totalAppearances ?? 0,
       ...computed,
       ...overrides,
       _computed: computed,
@@ -447,6 +451,31 @@ async function _PATCH(
     return after ? json(after) : notFound()
   }
 
+  // PATCH /api/media/:id/notes/:noteId — author-only edit of a video note
+  if (path[0] === 'media' && path[2] === 'notes' && path[3]) {
+    const asset = store.media.find(m => m.id === path[1])
+    const note  = asset?.notes.find(n => n.id === path[3])
+    if (!note) return notFound()
+    if (note.authorName !== user.name) {
+      return json({ error: 'You can only edit your own notes' }, 403)
+    }
+    const updated = { ...note, text: typeof body.text === 'string' ? body.text : note.text }
+    store.media = store.media.map(m =>
+      m.id === path[1]
+        ? { ...m, notes: m.notes.map(n => n.id === path[3] ? updated : n) }
+        : m,
+    )
+    writeAuditLog({
+      action: 'UPDATE', entityType: 'video_note',
+      entityId: path[3],
+      entityLabel: asset
+        ? `Note at ${fmt(note.timestamp)} · "${asset.originalFilename}" · ${mediaContext(asset)}`
+        : `Note at ${fmt(note.timestamp)}`,
+      user, before: note as unknown as Record<string, unknown>, after: updated as unknown as Record<string, unknown>, ip,
+    })
+    return json(updated)
+  }
+
   if (path[0] === 'clubs' && path.length === 2) {
     const before = store.clubs.find(c => c.id === path[1])
     store.clubs = store.clubs.map(c => c.id === path[1] ? { ...c, ...body } : c)
@@ -590,6 +619,9 @@ async function _DELETE(
   if (path[0] === 'media' && path[2] === 'notes' && path[3]) {
     const asset = store.media.find(m => m.id === path[1])
     const note  = asset?.notes.find(n => n.id === path[3])
+    if (note && note.authorName !== user.name) {
+      return json({ error: 'You can only delete your own notes' }, 403)
+    }
     store.media = store.media.map(m =>
       m.id === path[1]
         ? { ...m, notes: m.notes.filter(n => n.id !== path[3]) }

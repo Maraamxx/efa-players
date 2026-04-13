@@ -106,7 +106,7 @@ export const playerHandlers = [
     const playerMatches = _matches.filter((m) => m.playerId === params.id);
     return HttpResponse.json({
       playerId: params.id,
-      totalAppearances: playerMatches.length,
+      totalAppearances: 0,
       totalGoals: playerMatches.reduce((s, m) => s + m.goalsScored, 0),
       totalAssists: playerMatches.reduce((s, m) => s + m.assists, 0),
       totalMinutes: playerMatches.reduce((s, m) => s + m.minutesPlayed, 0),

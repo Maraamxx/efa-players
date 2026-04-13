@@ -132,7 +132,7 @@ const Input = ({
         width: '100%', height: 38,
         border: `1px solid ${focused ? 'var(--red)' : 'var(--border2)'}`,
         borderRadius: 'var(--r)', background: 'var(--bg)',
-        fontFamily: isAr ? 'var(--amiri)' : 'var(--onest)',
+        fontFamily: isAr ? 'var(--arabic)' : 'var(--onest)',
         fontSize: isAr ? 16 : 13,
         color: 'var(--t1)', padding: '0 12px', outline: 'none',
         direction: isAr ? 'rtl' : 'ltr',
@@ -281,28 +281,19 @@ const set = (key: keyof FormData, value: any) => {
 }
 
   // ── validation ──
+  // Only names (EN/AR), picture, and birthdate are mandatory. Everything else
+  // is optional, including ID number, positions, club, nationalities beyond
+  // the default, contact info, and dynamic field "required" flags.
   const validate = (s: number): boolean => {
     const e: Partial<Record<keyof FormData, string>> = {}
-if (s === 0) {
-  if (!form.nameEn.trim())   e.nameEn    = 'Required'
-  if (!form.nameAr.trim())   e.nameAr    = 'Required'
-  if (!form.birthdate)       e.birthdate = 'Required'
-  if (!form.idNumber.trim()) e.idNumber  = 'Required'
-  if (form.idNumber && form.idNumber.length !== 14) e.idNumber = 'Must be 14 digits'
-}
-    if (s === 1) {
-      if (form.positions.length === 0) e.positions = 'Required'
-      if (!form.preferredFoot)  e.preferredFoot   = 'Required'
-      if (!form.height)         e.height          = 'Required'
-      if (!form.currentClubId)  e.currentClubId   = 'Required'
-      if (!form.currentLeagueId) e.currentLeagueId = 'Required'
-    }
-    if (s === 2) {
-      if (form.nationalities.length === 0) e.nationalities = 'At least one nationality required'
+    if (s === 0) {
+      if (!form.nameEn.trim()) e.nameEn    = 'Required'
+      if (!form.nameAr.trim()) e.nameAr    = 'Required'
+      if (!form.birthdate)     e.birthdate = 'Required'
+      if (!form.photoPreview)  (e as any).photoFile = 'Player photo is required'
+      if (form.idNumber && form.idNumber.length !== 14) e.idNumber = 'Must be 14 digits'
     }
     if (s === 3) {
-      if (!form.fatherName.trim())  e.fatherName  = 'Required'
-      if (!form.fatherPhone.trim()) e.fatherPhone = 'Required'
       if (form.fatherEmail.trim()) {
         const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
         if (!emailRe.test(form.fatherEmail.trim())) {
@@ -313,17 +304,7 @@ if (s === 0) {
         e.fatherPhone = 'Phone number too short (min 7 digits)'
       }
     }
-    if (s === 4) {
-  schemas
-    .filter(schema => schema.isRequired && schema.entityTarget === 'player')
-    .forEach(schema => {
-      const val = form.dynamicFields[schema.id]
-      if (!val || (typeof val === 'string' && !val.trim())) {
-        errors[`dynamic_${schema.id}`] = `${schema.label.en} is required`
-      }
-    })
-}
-    setErrors(e)
+    setErrors(e as Record<string, string>)
     return Object.keys(e).length === 0
   }
 
@@ -535,7 +516,7 @@ router.push(`/players/${created.id}`)
 
               {/* photo upload */}
               <div style={{ marginBottom: 20 }}>
-                <FieldLabel>PLAYER PHOTO</FieldLabel>
+                <FieldLabel required>PLAYER PHOTO</FieldLabel>
                 <div
                   ref={dropRef}
                   onClick={() => fileRef.current?.click()}
@@ -575,6 +556,11 @@ router.push(`/players/${created.id}`)
                   )}
                 </div>
                 <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => { if (e.target.files?.[0]) handleFile(e.target.files[0]) }} />
+                {errors.photoFile && (
+                  <div style={{ fontFamily: 'var(--onest)', fontSize: 11, color: 'var(--red)', marginTop: 4 }}>
+                    {errors.photoFile}
+                  </div>
+                )}
               </div>
 
               <div className="wizard-form-grid2" style={{ marginBottom: 16 }}>
@@ -606,12 +592,12 @@ router.push(`/players/${created.id}`)
                   {err('birthdate')}
                 </div>
                 <div style={fieldWrap}>
-                  <FieldLabel required>STATUS</FieldLabel>
+                  <FieldLabel>STATUS</FieldLabel>
                   <CustomSelect value={form.status} onChange={v => set('status', v as PlayerStatus)} searchable={false}
                     options={[{ value: 'active', label: 'Active' }, { value: 'inactive', label: 'Inactive' }, { value: 'suspended', label: 'Suspended' }]} />
                 </div>
                 <div style={fieldWrap}>
-                  <FieldLabel required>NATIONAL ID</FieldLabel>
+                  <FieldLabel>NATIONAL ID</FieldLabel>
                   <Input value={form.idNumber} onChange={v => set('idNumber', v.replace(/\D/g,'').slice(0,14))}
                     placeholder="14-digit national ID"
                     type="tel" />
@@ -630,7 +616,7 @@ router.push(`/players/${created.id}`)
 
               <div className="wizard-form-grid2" style={{ marginBottom: 16 }}>
                 <div style={{ ...fieldWrap, gridColumn: 'span 2' }}>
-                  <FieldLabel required>POSITION(S)</FieldLabel>
+                  <FieldLabel>POSITION(S)</FieldLabel>
                   <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 5 }}>
                     {POSITIONS.map(p => {
                       const on = form.positions.includes(p.value as Position)
@@ -658,18 +644,18 @@ router.push(`/players/${created.id}`)
                   {err('positions')}
                 </div>
                 <div style={fieldWrap}>
-                  <FieldLabel required>PREFERRED FOOT</FieldLabel>
+                  <FieldLabel>PREFERRED FOOT</FieldLabel>
                   <CustomSelect value={form.preferredFoot} onChange={v => set('preferredFoot', v as any)} searchable={false}
                     options={[{ value: 'right', label: 'Right' }, { value: 'left', label: 'Left' }, { value: 'both', label: 'Both' }]} placeholder="Select foot" />
                   {err('preferredFoot')}
                 </div>
                 <div style={fieldWrap}>
-                  <FieldLabel required>HEIGHT (CM)</FieldLabel>
+                  <FieldLabel>HEIGHT (CM)</FieldLabel>
                   <Input value={form.height} onChange={v => set('height', v.replace(/\D/g,'').slice(0,3))} placeholder="e.g. 178" type="tel" />
                   {err('height')}
                 </div>
                 <div style={fieldWrap}>
-                  <FieldLabel required>CURRENT LEAGUE</FieldLabel>
+                  <FieldLabel>CURRENT LEAGUE</FieldLabel>
                   <CustomSelect value={form.currentLeagueId} onChange={v => {
                     set('currentLeagueId', v)
                     if (form.currentClubId) {
@@ -681,7 +667,7 @@ router.push(`/players/${created.id}`)
                   {err('currentLeagueId')}
                 </div>
                 <div style={fieldWrap}>
-                  <FieldLabel required>CURRENT CLUB</FieldLabel>
+                  <FieldLabel>CURRENT CLUB</FieldLabel>
                   {form.currentLeagueId ? (
                     <CustomSelect value={form.currentClubId} onChange={v => set('currentClubId', v)}
                       options={clubs.filter(c => c.leagueId === form.currentLeagueId).map(c => ({ value: c.id, label: c.name.en }))} placeholder="Select club" />
@@ -735,7 +721,7 @@ router.push(`/players/${created.id}`)
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
                       {/* country */}
                       <div style={{ flex: 1, minWidth: 150 }}>
-                        <FieldLabel required>COUNTRY</FieldLabel>
+                        <FieldLabel>COUNTRY</FieldLabel>
                         {isEgyptian ? (
                           <div style={{ height: 38, border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '0 12px', display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--onest)', fontSize: 13, color: 'var(--t2)' }}>
                             <img src={FLAG('EG')} alt="EG" style={{ borderRadius: 2 }} />
@@ -851,12 +837,12 @@ router.push(`/players/${created.id}`)
 
               <div className="wizard-form-grid2" style={{ marginBottom: 16 }}>
                 <div style={{ ...fieldWrap, gridColumn: 'span 2' }}>
-                  <FieldLabel required>FATHER'S FULL NAME</FieldLabel>
+                  <FieldLabel>FATHER'S FULL NAME</FieldLabel>
                   <Input value={form.fatherName} onChange={v => set('fatherName', v)} placeholder="e.g. Ahmed Ibrahim" />
                   {err('fatherName')}
                 </div>
                 <div style={fieldWrap}>
-                  <FieldLabel required>PHONE NUMBER</FieldLabel>
+                  <FieldLabel>PHONE NUMBER</FieldLabel>
                   <Input value={form.fatherPhone} onChange={v => set('fatherPhone', v.replace(/[^\d]/g, '').slice(0, 15))} placeholder="Digits only — no spaces or symbols" type="tel" />
                   {err('fatherPhone')}
                 </div>

@@ -12,7 +12,7 @@ export function isArabic(text: string): boolean {
 export function textStyle(text: string, base = 13): React.CSSProperties {
   const arabic = isArabic(text)
   return {
-    fontFamily: arabic ? 'var(--amiri)' : 'var(--onest)',
+    fontFamily: arabic ? 'var(--arabic)' : 'var(--onest)',
     fontSize:   arabic ? base + 2 : base,
     direction:  arabic ? 'rtl' : 'ltr',
   }

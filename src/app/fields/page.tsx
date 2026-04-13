@@ -102,7 +102,7 @@ function Input({
         width: '100%', height: 38,
         border: `1px solid ${focused ? 'var(--red)' : 'var(--border2)'}`,
         borderRadius: 'var(--r)', background: 'var(--bg)',
-        fontFamily: arabic ? 'var(--amiri)' : 'var(--onest)',
+        fontFamily: arabic ? 'var(--arabic)' : 'var(--onest)',
         fontSize: arabic ? 15 : 13, fontWeight: 500,
         color: 'var(--t1)', padding: '0 12px', outline: 'none',
         direction: arabic ? 'rtl' : 'ltr',
@@ -448,7 +448,7 @@ export default function FieldsPage() {
                               {schema.label.en}
                             </div>
                             {schema.label.ar && (
-                              <div style={{ fontFamily: 'var(--amiri)', fontSize: 13, color: 'var(--t3)', direction: 'rtl' as const, textAlign: 'left' as const, marginTop: 2 }}>
+                              <div style={{ fontFamily: 'var(--arabic)', fontSize: 13, color: 'var(--t3)', direction: 'rtl' as const, textAlign: 'left' as const, marginTop: 2 }}>
                                 {schema.label.ar}
                               </div>
                             )}

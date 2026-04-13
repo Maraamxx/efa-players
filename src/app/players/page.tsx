@@ -345,7 +345,7 @@ export default function PlayersPage() {
                           {p.name.en}
                         </div>
                         <div style={{
-                          fontFamily: 'var(--amiri)', fontSize: 13,
+                          fontFamily: 'var(--arabic)', fontSize: 13,
                           color: 'var(--t3)', marginTop: 1,
                         }}>
                           {p.name.ar}
